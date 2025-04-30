@@ -18,6 +18,7 @@ login.generarLogin()
 if "usuario" not in st.session_state:
     st.stop()
 
+st.header(" :orange[Inicio]", divider=True)
 conn = st.connection('mysql', type='sql')
 
 # Perform query.

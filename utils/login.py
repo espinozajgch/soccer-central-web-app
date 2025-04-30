@@ -26,7 +26,7 @@ def generarMenu(usuario):
         usuario (str): usuario utilizado para generar el menú
     """        
     with st.sidebar:
-        #st.logo("assets/images/img.png", size="large")
+        st.logo("assets/images/soccer-central.png", size="large")
 
         # Cargamos la tabla de usuarios
         dfusuarios = pd.read_csv('usuarios.csv')
@@ -73,13 +73,14 @@ def generarLogin():
     if 'usuario' in st.session_state:
         generarMenu(st.session_state['usuario']) 
     else: 
+        st.logo("assets/images/soccer-central.png", size="large")
         col1, col2, col3 = st.columns([2, 1.5, 2])
         with col2:
-            #st.logo("assets/images/img.png", size="large")
             st.text("¡Bienvenido!")
         
-        col1, col2, col3 = st.columns([2, 1.5, 2])
+        
         with col2:
+            #st.logo("assets/images/soccer-central.png", size="large")
             # Cargamos el formulario de login       
             with st.form('frmLogin'):
                 parUsuario = st.text_input('Usuario')
