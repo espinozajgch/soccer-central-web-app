@@ -1,15 +1,15 @@
 ![SOCCER CENTRAL](assets/images/soccer-central.png)
 
-# soccer-central-web-app
+# Soccer central web app
 Soccer Central es una organización innovadora, basada en datos, que aprovecha el poder de la información para desarrollar todo el potencial de la academia. Con un enfoque constante en el desarrollo de jugadores, las estrategias de entrenamiento y la optimización del rendimiento general, se aprovechan los datos para impulsar decisiones informadas, experiencias personalizadas y una cultura de excelencia dentro y fuera del campo.
 
-# Descripción del Proyecto
+## Descripción del Proyecto
 El proyecto impulsado por Soccer Central busca obtener una visión integral del desempeño físico y táctico de los jugadores de la academia que participan dentro de la Liga "MLS Next", la cual representa la cumbre de la competición de fútbol juvenil masculino en los Estados Unidos y alberga a los mejores equipos y jugadores del país. Para dicho propósito, la academia cuenta con una diversidad de fuentes de datos que permiten dar trazabilidad a los comportamientos y rendimientos deportivos de los jugadores y equipos; sin embargo, se busca optimizar el proceso de análisis y toma de decisiones de una forma agregada.
 
-# Objetivo del Proyecto
+## Objetivo del Proyecto
 Facilitar el análisis del rendimiento deportivo de los jugadores de la academia Soccer Central mediante la creación de una base de datos normalizada por relevancia del dato y el uso de visualizadores e informes personalizados, para apoyar la mejora continua en la toma de decisiones de los interesados, a desarrollarse en un período de 10 semanas.
 
-# Objetivos Específicos
+## Objetivos Específicos
 1. Centralización de Datos: Crear una base de datos estructurada que centralice toda la información relevante de los jugadores, incluyendo datos de rendimiento, lesiones, composición corporal y académicos.
 2. Mejora de Procesos: Profesionalizar el uso de datos mediante la implementación de procesos de adquisición, control y auditoría, evitando el uso desordenado de múltiples Excel.
 3. Análisis de Datos: Realizar un análisis profundo de los datos disponibles para identificar patrones y áreas de mejora en el rendimiento de los jugadores. 
@@ -19,7 +19,7 @@ Facilitar el análisis del rendimiento deportivo de los jugadores de la academia
 7. Desarrollo de Herramientas: Evaluar y seleccionar herramientas tecnológicas adecuadas para el análisis y visualización de datos, considerando la comodidad y experiencia del equipo.
 8. Presentación de Resultados: Establecer un formato y diseño coherente para la presentación de resultados, alineado con la identidad de la institución.
 
-# Metodología
+## Metodología
 La metodología utilizada en este estudio sigue un enfoque estructurado basado en la metodología CRISP-DM (Cross-Industry Standard Process for Data Mining), la cual se ha consolidado como uno de los enfoques más eficaces para el desarrollo y aplicación de proyectos de minería de datos. Este enfoque se divide en varias fases clave, que orientan el proceso desde la comprensión inicial del problema hasta la implementación de soluciones basadas en datos. 
 
 1. Comprensión del negocio: En esta fase, se define el problema de investigación, se establecen los objetivos del proyecto y se formulan las preguntas clave que guiarán el análisis de datos. 
