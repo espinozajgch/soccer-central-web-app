@@ -55,9 +55,10 @@ def Setup_page():
 
 
 def Show_Player_Info():
-    #Este módulo integra la información base del jugador, DRAFT 1.
+    #Este módulo integra la información base del jugador (DRAFT version).
     #Se estaría capturando la misma desde la DB con la información normalizada.
     #En Módulo actual Únicamente se muestra la posible posición de información básica del jugador y el club.
+    # Se espera revisión de contenido y posible look and feel con el cliente para la versión final.
 
     
     st.header("BASIC PLAYER INFO DEMO", divider="gray")
