@@ -43,9 +43,13 @@ def generarMenu(usuario):
         # Mostramos los enlaces de páginas
         st.page_link("app.py", label="Inicio", icon=":material/home:")
         st.subheader(":material/dashboard: Tableros")
-        st.page_link("pages/dashboard.py", label="360", icon=":material/contacts:")
+        st.page_link("pages/player_layout_draft.py", label="360", icon=":material/contacts:")
+        st.page_link("pages/Achamp_page.py", label="Achamps")
+        st.page_link("pages/byga_page.py", label="Byga")
+        st.page_link("pages/taka_page.py", label="Taka")
         st.subheader(":material/manage_accounts: Administrador")
         st.page_link("pages/players.py", label="Jugadores", icon=":material/account_circle:")
+
         st.divider()
 
         # Botón para cerrar la sesión
@@ -62,26 +66,21 @@ def cerrarSesion():
     st.rerun()
 
 def generarLogin():
-    """Genera la ventana de login o muestra el menú si el login es válido"""    
-
-    #Verificamos si el usuario ya está en la URL o en session_state
-    usuario_actual = st.query_params.get("user", None)
-    if usuario_actual:
+    # 🔄 Restaurar sesión desde la URL si existe
+    usuario_actual = st.query_params.get("user")
+    if usuario_actual and "usuario" not in st.session_state:
         st.session_state['usuario'] = usuario_actual
 
-    # Si ya hay usuario, mostramos el menú
     if 'usuario' in st.session_state:
-        generarMenu(st.session_state['usuario']) 
-    else: 
-        st.logo("assets/images/soccer-central.png", size="large")
+        st.query_params.update({"user": st.session_state["usuario"]})
+        generarMenu(st.session_state['usuario'])
+    else:
         col1, col2, col3 = st.columns([2, 1.5, 2])
         with col2:
-            st.text("¡Bienvenido!")
-        
-        
+            st.logo("assets/images/soccer-central.png", size="large")
+
+        col1, col2, col3 = st.columns([2, 1.5, 2])
         with col2:
-            #st.logo("assets/images/soccer-central.png", size="large")
-            # Cargamos el formulario de login       
             with st.form('frmLogin'):
                 parUsuario = st.text_input('Usuario')
                 parPassword = st.text_input('Password', type='password')
@@ -89,11 +88,8 @@ def generarLogin():
 
                 if btnLogin:
                     if validarUsuario(parUsuario, parPassword):
-                        # Guardamos usuario en session_state y en la URL
                         st.session_state['usuario'] = parUsuario
-                        st.query_params.user = parUsuario  #Persistencia en la URL
+                        st.query_params.update({'user': parUsuario})  # persistencia en URL
                         st.rerun()
                     else:
                         st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
-
-
