@@ -178,3 +178,4 @@ cython_debug/
 assets/images/
 venv
 
+.idea/soccer-central-web-app.iml
