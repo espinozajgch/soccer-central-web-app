@@ -19,15 +19,4 @@ if "usuario" not in st.session_state:
     st.stop()
 
 st.header(" :orange[Inicio]", divider=True)
-conn = st.connection('mysql', type='sql')
-
-# Perform query.
-df = conn.query('SELECT * from db_soccercentral.users;', ttl=600)
-
-st.dataframe(df)
-
-# Print results.
-#for row in df.itertuples():
-#    st.write(f"{row.name} has a :{row.pet}:")
-
 

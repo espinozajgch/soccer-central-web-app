@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+from auth import get_user
+from db import check_password
 
 # Validación simple de usuario y clave con un archivo csv
 
@@ -13,11 +15,18 @@ def validarUsuario(usuario,clave):
     Returns:
         bool: True usuario valido, False usuario invalido
     """    
-    dfusuarios = pd.read_csv('usuarios.csv')
-    if len(dfusuarios[(dfusuarios['usuario']==usuario) & (dfusuarios['clave']==clave)])>0:
-        return True
-    else:
+    if 'login_attempts' not in st.session_state:
+        st.session_state.login_attempts = 0
+    stored_pass = get_user(usuario)
+    if st.session_state.login_attempts > 5:
+        st.error("Demasiados intentos. Intenta más tarde.")
         return False
+    else:
+        if stored_pass and check_password(clave, stored_pass):
+            return True
+        else:
+            st.session_state.login_attempts += 1
+            return False
 
 def generarMenu(usuario):
     """Genera el menú dependiendo del usuario
