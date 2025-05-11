@@ -5,3 +5,4 @@ bcrypt~=4.3.0
 seaborn==0.13.2
 streamlit==1.42.2
 SQLAlchemy~=2.0.40
+mysql-connector-python==9.3.0
