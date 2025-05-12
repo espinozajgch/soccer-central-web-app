@@ -2,7 +2,7 @@ import streamlit as st
 
 # --- SHARED ON ALL PAGES ---
 with st.sidebar:
-    st.logo("assets/images/soccer-central.png.png")
+    st.logo("assets/images/soccer-central.png")
 
 # --- PAGE SETUP ---
 home_page = st.Page(
