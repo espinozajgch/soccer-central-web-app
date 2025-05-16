@@ -17,13 +17,15 @@ def validarUsuario(usuario,clave):
     """    
     if 'login_attempts' not in st.session_state:
         st.session_state.login_attempts = 0
-    stored_pass = get_user(usuario)
+    user_db = get_user(usuario)
+    stored_pass = user_db.password_hash
     if st.session_state.login_attempts > 5:
         st.error("Demasiados intentos. Intenta más tarde.")
         return False
     else:
         print("Password:" + str(hash_password(clave)))
         if stored_pass and check_password(clave, stored_pass):
+            st.session_state.usuario = user_db
             return True
         else:
             st.session_state.login_attempts += 1
@@ -45,7 +47,7 @@ def generarMenu(usuario):
         dfUsuario =dfusuarios[(dfusuarios['usuario']==usuario)]
         
         # Cargamos el nombre del usuario
-        nombre= dfUsuario['nombre'].values[0]
+        nombre= st.session_state.usuario
         
         #Mostramos el nombre del usuario
         st.write(f"Hola **:blue-background[{nombre}]** ")
