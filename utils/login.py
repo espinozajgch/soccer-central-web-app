@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from auth import get_user
-from db import check_password
+from db import check_password, hash_password
 
 # Validación simple de usuario y clave con un archivo csv
 
@@ -22,6 +22,7 @@ def validarUsuario(usuario,clave):
         st.error("Demasiados intentos. Intenta más tarde.")
         return False
     else:
+        print("Password:" + str(hash_password(clave)))
         if stored_pass and check_password(clave, stored_pass):
             return True
         else:
