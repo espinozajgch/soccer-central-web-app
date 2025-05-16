@@ -1,9 +1,7 @@
-import os
-
 import streamlit as st
+from passlib.hash import bcrypt as passlib_bcrypt
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import bcrypt
 
 DATABASE_URL = f"mysql+mysqlconnector://" + \
     f"{st.secrets.db.username}" + ":" + \
@@ -17,8 +15,10 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
 PEPPER = "soccerCentralHash"
-def hash_password(password: str) -> bytes:
-    return bcrypt.hashpw((password + PEPPER).encode('utf-8'), bcrypt.gensalt())
+def hash_password(password: str) -> str:
+    # passlib returns the hashed password as a string (not bytes)
+    return passlib_bcrypt.hash(password + PEPPER)
 
-def check_password(password: str, hashed: bytes) -> bool:
-    return bcrypt.checkpw((password + PEPPER).encode('utf-8'), hashed)
+def check_password(password: str, hashed: str) -> bool:
+    # passlib automatically handles salt & algorithm from the stored hash
+    return passlib_bcrypt.verify(password + PEPPER, hashed)

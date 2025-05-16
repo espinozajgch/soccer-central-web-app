@@ -5,6 +5,6 @@ def get_user(username):
     session = SessionLocal()
     try:
         user = session.query(Users).filter_by(email=username).first()
-        return user.password_hash if user else None
+        return user if user else None
     finally:
         session.close()
