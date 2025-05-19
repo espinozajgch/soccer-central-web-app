@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import pymysql
 pymysql.install_as_MySQLdb()
-from datetime import datetime
+import datetime
 
 
 
@@ -84,7 +84,7 @@ def Show_Player_Info():
     dbconn = connect_to_db()
        
     #Preparación de la página**********************************************************************
-    st.header("360° PLAYER DATA LAYOUT", divider="gray")
+    st.header("360° DATA PLAYER LAYOUT", divider="gray")
     # Mostrar la foto del jugador.
     #st.image("https://media.gettyimages.com/id/1365815844/es/foto/mexico-city-mexico-argentina-captain-diego-maradona-pictured-before-the-fifa-1986-world-cup.jpg?s=612x612&w=gi&k=20&c=vmUfSD2BY0_TQqFi8btORJj6OlNIBTvhkq1RrsY9kV4=", width=300)
     
@@ -132,6 +132,14 @@ def Show_Player_Info():
     # --- Ejecución de la consulta ---
     try:
         df = dbconn.query(sql, params={"player_id": selected_player_id}, ttl=3600)
+        # Define los nombres de las columnas según el SELECT de tu consulta
+        columnas = [
+            "user_id", "first_name", "last_name", "birth_date", "gender", "photo_url", "phone",
+            "player_id", "nationality", "city", "number", "dominant_foot", "primary_position",
+            "secondary_position", "height", "stats_player_id", "goals", "minutes_played"
+        ]
+        # Creando dataframe para utilizar en visualizador con Data Elements  
+        #df2 = pd.DataFrame(df, columns=columnas)
     except Exception as e:
         st.error(f"Error durante la consulta: {e}")
 
@@ -152,7 +160,7 @@ def Show_Player_Info():
         #Incluir más campos calculados como Edad + Gol Avg/90.
         # Calcular Edad
         birth_date = registro['birth_date']
-        today = datetime.today()
+        today = datetime.datetime.today()
         age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
         # Agregar el campo calculado al diccionario
         registro['age'] = age
@@ -191,60 +199,22 @@ def Show_Player_Info():
     else:
         st.info("No se encontraron datos para mostrar.")
     
-    #Inyectar CSS personalizado
-    st.markdown(
-        """
-        <style>
-        /* Estilos para las claves (labels) */
-        .key-text {
-            font-size: 26px;
-            color: #333333;
-            font-weight: bold;
-        }
-        /* Estilos para los valores */
-        .value-text {
-            font-size: 24px;
-            color: #333333;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )   
-    
-    
-    # Crear dos columnas: panel izquierdo (datos personales y foto), 
-    # panel derecho (datos con mayor enfoque al seguimiento por la academia).
-    col_left, col_right = st.columns(2)
+    # Organizar las tablas en una cuadrícula de 2x2 usando st.columns
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("GENERAL INFO", divider="red")
+        st.table(general_fields)
+    with col2:
+        st.subheader("PLAYER PROFILE & STATS", divider="red")
+        st.table(profile_fields)
 
-    # Panel Izquierdo: Información Personal del Jugador junto a la foto.
-    with col_left:
-        col_left.subheader("GENERAL INFO", divider="red")
-        with st.container(border=True):
-            st.markdown('<div class="custom-container">', unsafe_allow_html=True)
-            for key, value in general_fields.items():
-                # Cada par clave-valor se muestra en dos columnas:
-                key_col, value_col = st.columns([1, 2])
-                with key_col:
-                    st.markdown(f'<span class="key-text">{key}:</span>', unsafe_allow_html=True)
-                with value_col:
-                    st.markdown(f'<span class="value-text">{value}</span>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)            
-            
-
-    # Panel Derecho: Player Profile & Stats.
-    with col_right:
-        # Título del panel
-        col_right.subheader("PLAYER PROFILE & STATS", divider="red")
-        with st.container(border=True):
-            st.markdown('<div class="custom-container">', unsafe_allow_html=True)
-            for key, value in profile_fields.items():
-                # Cada par clave-valor se muestra en dos columnas:
-                key_col, value_col = st.columns([1, 2])
-                with key_col:
-                    st.markdown(f'<span class="key-text">{key}:</span>', unsafe_allow_html=True)
-                with value_col:
-                    st.markdown(f'<span class="value-text">{value}</span>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+    col3, col4 = st.columns(2)
+    with col3:
+        st.subheader("GENERAL INFO", divider="red")
+        st.table(general_fields)
+    with col4:
+        st.subheader("PLAYER PROFILE & STATS", divider="red")
+        st.table(profile_fields)
 
 #******************Valorar Construcción para incluir Vídeos y Actividad en Competiciones********************************
               

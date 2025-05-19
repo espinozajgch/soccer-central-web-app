@@ -56,6 +56,7 @@ def generarMenu(usuario):
         st.page_link("app.py", label="Inicio", icon=":material/home:")
         st.subheader(":material/dashboard: Tableros")
         st.page_link("pages/player_layout_draft.py", label="360", icon=":material/contacts:")
+        st.page_link("pages/player_report_from_layout.py", label="REPORTS", icon=":material/picture_as_pdf:")
         st.page_link("pages/Achamp_page.py", label="Achamps")
         st.page_link("pages/byga_page.py", label="Byga")
         st.page_link("pages/taka_page.py", label="Taka")
