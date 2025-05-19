@@ -60,9 +60,9 @@ def generarMenu(usuario):
         st.subheader(":material/dashboard: Tableros")
         st.page_link("pages/player_layout_draft.py", label="360", icon=":material/contacts:")
         st.page_link("pages/player_report_from_layout.py", label="REPORTS", icon=":material/picture_as_pdf:")
-        st.page_link("pages/Achamp_page.py", label="Achamps")
-        st.page_link("pages/byga_page.py", label="Byga")
-        st.page_link("pages/taka_page.py", label="Taka")
+        st.page_link("pages/Achamp_page.py", label="Achamps", icon=":material/bar_chart:")
+        st.page_link("pages/byga_page.py", label="Byga", icon=":material/sports_soccer:")
+        st.page_link("pages/taka_page.py", label="Taka", icon=":material/videocam:")
         st.subheader(":material/manage_accounts: Administrador")
         st.page_link("pages/players.py", label="Jugadores", icon=":material/account_circle:")
 

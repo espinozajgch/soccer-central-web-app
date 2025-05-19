@@ -21,12 +21,12 @@ about_page = st.Page(
 project_1_page = st.Page(
     "pages/byga_page.py",
     title="Byga",
-    icon=":material/analytics:",
+    icon=":material/bar_chart:",
 )
 project_2_page = st.Page(
     "pages/Achamp_page.py",
     title="A-Champ",
-    icon=":material/sports_and_outdoors:",
+    icon=":material/sports_soccer:",
 )
 
 # --- NAVIGATION SETUP [WITHOUT SECTIONS] ---
