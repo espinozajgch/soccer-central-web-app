@@ -18,6 +18,9 @@ def validarUsuario(usuario,clave):
     if 'login_attempts' not in st.session_state:
         st.session_state.login_attempts = 0
     user_db = get_user(usuario)
+    if user_db is None:
+        st.session_state.login_attempts += 1
+        return False
     stored_pass = user_db.password_hash
     if st.session_state.login_attempts > 5:
         st.error("Demasiados intentos. Intenta más tarde.")
