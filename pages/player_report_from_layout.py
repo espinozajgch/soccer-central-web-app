@@ -10,19 +10,20 @@ from sc_app.create_report import create_pdf
 #from common_utils import radar_chart
 import random
 import plotly.express as px
+import utils.pdf_generator  as generate_player_report
 
 
 # Función para inicializar la conexión a la base de datos y cachearla
 def connect_to_db():
     try:
-        # Intentamos obtener la conexión definida en los secrets
-        conn = st.connection('mysql', type='sql')
+        # InteXntamos obtener la conexión definida en los secrets
+        return st.connection('mysql', type='sql')
         #st.success("Conexión establecida correctamente")
     except Exception as e:
         # Si ocurre algún error, lo capturamos y mostramos un mensaje en la aplicación
         st.error("Error al conectar con la base de datos:")
         st.error(e) 
-    return conn
+    return None
 
 # Función para calcular la edad
 
@@ -201,21 +202,42 @@ def Show_Player_Info():
 #*********************************FIN Show_Player_Info()*********************************************************
 
     # En el sidebar, se coloca un botón para generar el informe PDF
-    if st.sidebar.button("Create Player PDF Report", icon=":material/picture_as_pdf:"):
-        # Cargado DF para imprimir en PDF.
-        pdf_buffer = create_pdf(df_personal, df_profile)
-        # Extrae todos los datos del buffer en una variable bytes
-        pdf_bytes = pdf_buffer.getvalue()
-        # Cierra el buffer para liberar memoria
-        pdf_buffer.close()
-        # Se muestra un botón de descarga para el PDF generado
-        st.sidebar.download_button(
-            label="Download PDF Report",
-            icon=":material/download:",
-            data=pdf_bytes,
-            file_name="player_report.pdf",
-            mime="application/pdf"
-        )
+    empty_df = pd.DataFrame()
+
+    player_data = {
+        "first_name": df["first_name"],
+        "last_name": df["last_name"],
+        "birth_date": df["birth_date"],
+        "nationality": df["nationality"],
+        "primary_position": df["primary_position"],
+        "secondary_position": df["secondary_position"],
+        "number": df["number"],
+        "dominant_foot": df["dominant_foot"],
+        "height": df["height"],
+        "education_level": "High School",
+        "school_name": "Soccer Central Academy",
+        "photo_url": df["photo_url"],
+        "notes": df.get("notes", ""),
+        "player_activity_history": df.get("player_activity_history", "")
+    }
+
+    pdf_buffer = generate_player_report.generate_player_report(
+        player_data=player_data,
+        player_teams=empty_df,
+        player_games=empty_df,
+        player_metrics=empty_df,
+        player_evaluations=empty_df,
+        player_videos=empty_df,
+        player_documents=empty_df
+    )
+
+    st.download_button(
+        label="📄 Generate & Download PDF Report",
+        data=pdf_buffer,
+        file_name=f"player_report_{player_data['last_name']}.pdf",
+        mime="application/pdf"
+    )
+
 
 def main():
 
