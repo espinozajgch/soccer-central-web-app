@@ -10,7 +10,7 @@ from sc_app.create_report import create_pdf
 #from common_utils import radar_chart
 import random
 import plotly.express as px
-import utils.pdf_generator  as generate_player_report
+from utils.pdf_generator  import generate_player_report
 
 
 # Función para inicializar la conexión a la base de datos y cachearla
@@ -162,11 +162,13 @@ def Show_Player_Info():
 
     #Preparando Info de Salida 
     #df_personal
-    df_personal = df_personal.reset_index()
-    df_personal.columns = ["Personal Info", ""]
+    f_personal = df_personal.reset_index()
+    df_personal.columns = ["Personal Info", "Value"]
+    df_personal = df_personal.astype(str)
 
-    df_profile = df_profile.reset_index()
-    df_profile.columns = ["Profile", ""]
+    f_profile = df_profile.reset_index()
+    df_profile.columns = ["Profile", "Value"]
+    df_profile = df_profile.astype(str)
     # Organizar las tablas en una cuadrícula de 2x2 usando st.columns
     col1, col2 = st.columns(2)
     with col1:
@@ -215,29 +217,49 @@ def Show_Player_Info():
         "dominant_foot": df["dominant_foot"],
         "height": df["height"],
         "education_level": "High School",
-        "school_name": "Soccer Central Academy",
+        "school_name": "Soccer Central SA",
         "photo_url": df["photo_url"],
         "notes": df.get("notes", ""),
         "player_activity_history": df.get("player_activity_history", "")
     }
 
-    pdf_buffer = generate_player_report.generate_player_report(
-        player_data=player_data,
-        player_teams=empty_df,
-        player_games=empty_df,
-        player_metrics=empty_df,
-        player_evaluations=empty_df,
-        player_videos=empty_df,
-        player_documents=empty_df
-    )
+    # Inicializa el estado si no existe para mostrar el boton download y generar el pdf posteriormente
+    if "pdf_ready" not in st.session_state:
+        st.session_state["pdf_ready"] = False
+    if "pdf_buffer" not in st.session_state:
+        st.session_state["pdf_buffer"] = None
+    if "pdf_generating" not in st.session_state:
+        st.session_state["pdf_generating"] = False
 
-    st.download_button(
-        label="📄 Generate & Download PDF Report",
-        data=pdf_buffer,
-        file_name=f"player_report_{player_data['last_name']}.pdf",
-        mime="application/pdf"
-    )
+    # Mostrar botón con lógica condicional
+    if not st.session_state["pdf_ready"]:
+        if st.session_state["pdf_generating"]:
+            st.info("Generating report... Please wait.")
+        else:
+            if st.button("📄 Generate Player Report"):
+                st.session_state["pdf_generating"] = True
+                with st.spinner("Generating PDF report..."):
+                    pdf_buffer = generate_player_report(
+                        player_data=player_data,
+                        player_teams=empty_df,
+                        player_games=empty_df,
+                        player_metrics=empty_df,
+                        player_evaluations=empty_df,
+                        player_videos=empty_df,
+                        player_documents=empty_df
+                    )
+                    st.session_state["pdf_buffer"] = pdf_buffer
+                    st.session_state["pdf_ready"] = True
+                    st.session_state["pdf_generating"] = False
+                    st.rerun()  # <- Refresca la página para mostrar el botón de descarga
 
+    else:
+        st.download_button(
+            label="⬇ Download PDF Report",
+            data=st.session_state["pdf_buffer"],
+            file_name=f"player_report_{player_data['last_name']}.pdf",
+            mime="application/pdf"
+        )
 
 def main():
 
