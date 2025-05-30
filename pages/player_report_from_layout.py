@@ -125,7 +125,7 @@ def Show_Player_Info():
         st.dataframe(df_personal_long, hide_index=True)
     with col2:
         st.subheader("PLAYER PROFILE & STATS", divider="red")
-        st.table(df_profile_long)
+        st.dataframe(df_profile_long, hide_index=True, use_container_width=True)
 
     col3, col4 = st.columns(2)
     with col3:
