@@ -6,83 +6,44 @@ import pymysql
 pymysql.install_as_MySQLdb()
 from datetime import datetime
 from sc_app.queries import player_360
-from sc_app.create_report import create_pdf
-#from common_utils import radar_chart
+from utils.pdf_generator import generate_player_report
 import random
 import plotly.express as px
-from utils.pdf_generator  import generate_player_report
 import base64
 
 
-# Función para inicializar la conexión a la base de datos y cachearla
 def connect_to_db():
     try:
-        # InteXntamos obtener la conexión definida en los secrets
         return st.connection('mysql', type='sql')
-        #st.success("Conexión establecida correctamente")
     except Exception as e:
-        # Si ocurre algún error, lo capturamos y mostramos un mensaje en la aplicación
         st.error("Error al conectar con la base de datos:")
-        st.error(e) 
+        st.error(e)
     return None
 
-# Función para calcular la edad
 
 def calculate_age(birth_date):
     today = datetime.today()
-    birth_date = birth_date
-    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
-    return age
+    return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
-# Función para calcular goles por 90 minutos
 
 def calculate_goals_per_90(goals, minutes_played):
-    # Verificar si minutes_played es cero para evitar la división por cero
-    if minutes_played == 0:
-        return 0
-    # Calcular goles por 90 minutos
-    goals_per_90 = (goals / minutes_played) * 90
-    return goals_per_90
+    return (goals / minutes_played) * 90 if minutes_played else 0
+
 
 def Setup_page():
     login.generarLogin()
-    # Configuración de la página
-    #Configuración título de página.
-    #st.set_page_config(page_title="360° PLAYER DATA LAYOUT", page_icon=":soccer:", 
-    #                    layout="wide",initial_sidebar_state="auto",
-    #                    menu_items={
-    #                        'Get Help': 'https://soccercentralsa.byga.net',
-    #                        'About': """
-    #                             ## Acerca de la Aplicación
-                                
-    #                             **Soccer Central Web App** es una aplicación desarrollada para facilitar el análisis del rendimiento deportivo de los jugadores de la academia Soccer Central.
-                                
-    #                             - **Desarrollado con:** Streamlit  
-    #                             - **Versión:** 1.0  
-    #                             - **Contacto:** support@soccercentral.com
-    #                             """
-    #                         }
-    #                    )
-    #Definición de Título y Descripción de Página
-    #Creación del Look and Feel de la Página
     logo = "./assets/images/soccer-central.png"
     st.sidebar.image(logo, width=350)
 
-
-    #******************************************Feature Provisional para Demo**************************************************************
-    # En el sidebar, el usuario selecciona los colores de fondo para cada panel
     main_bg_color = st.sidebar.color_picker("**Choose Background Color for Principal Panel**", "#EDF4F5")
     sidebar_bg_color = st.sidebar.color_picker("**Choose Background Color for Sidebar Panel**", "#D0DEE2")
-    # Inyectando CSS para personalizar los fondos utilizando los colores seleccionados
+
     st.markdown(
         f"""
         <style>
-        /* Contenedor principal */
         [data-testid="stAppViewContainer"] {{
             background-color: {main_bg_color};
-            
         }}
-        /* Sidebar */
         [data-testid="stSidebar"] {{
             background-color: {sidebar_bg_color};
         }}
@@ -90,102 +51,86 @@ def Setup_page():
         """,
         unsafe_allow_html=True
     )
-    #**************************************FIN de Feature Provisional para Demo***********************************************************
 
-#*******************************************Demo Radar Chart****************************************************************
-def radar_chart():  
+
+def radar_chart():
     dfx = pd.DataFrame(dict(
-    r=[random.randint(0,22),
-       random.randint(0,22),
-       random.randint(0,22),
-       random.randint(0,22),
-       random.randint(0,22),
-       random.randint(0,22)],
-    theta=['On Ball','Intelligence','Shot',
-           'Defensive', 'Aerial', 'Physical']))
-    fig = px.line_polar(dfx, r='r', theta='theta', line_close=True, template = "plotly_dark")
+        r=[random.randint(0, 22) for _ in range(6)],
+        theta=['On Ball', 'Intelligence', 'Shot', 'Defensive', 'Aerial', 'Physical']
+    ))
+    fig = px.line_polar(dfx, r='r', theta='theta', line_close=True, template="plotly_dark")
     return fig
-    
-#*******************************************FIN Demo Radar Chart****************************************************************
 
 
 def Show_Player_Info():
-    #Este módulo integra la información base del jugador.
-    #Se captura data desde DB en AWS con información normalizada.
-    #Para la versión actual (MVP) el módulo construido muestra la posible posición de información básica y del perfil del jugador.
-    #Versiones posteriores podrían facilitar una configuración personalizable por el usuario.
-    # Se espera revisión de contenido y posible look and feel con el cliente para la versión final.
-    
-    # Conexión a DB*******************
     dbconn = connect_to_db()
-       
-    #Preparación de la página**********************************************************************
     st.header("360° PLAYER DATA", divider="gray")
-    # El Usuario podrá escoger el jugador por el player_id.
-    # Obtener la lista de player_id desde la tabla players
+
     df_plyid = dbconn.query("SELECT player_id FROM players", ttl=3600)
     player_ids = df_plyid["player_id"].tolist()
-    # Crear un widget en el sidebar para que el usuario seleccione el player_id
     selected_player_id = st.sidebar.selectbox("Choose Player", player_ids)
-    
-    #****************Capturando consulta de data 360° del jugador en DataFrame********************************************************
-    # --- Ejecución de la consulta ---
+
     try:
-        #Obteniendo resultado de consulta general del jugador
         df = dbconn.query(player_360, params={"player_id": selected_player_id}, ttl=3600)
-        df = df.iloc[0] # Capturando el primer registro de la consulta. Existen inconsistencias en la DB para fechas de permanencias en equipos.
+        df = df.iloc[[0]]
     except Exception as e:
         st.error(f"Error durante la consulta: {e}")
+        return
 
-    #************************Preparación elementos a visualizar y otros campos calculados*************************************************************
-        
-    # --- Crear DataFrame de datos personales ---
-    df_personal = df[["last_name", "first_name", "birth_date", "gender", "photo_url", "nationality", "city", "phone"]]
-      # Calcular la edad
-    df_personal['age'] = calculate_age(df['birth_date']) 
-    
-    #Condiciones especiales de manejo de foto por DEMO.****************************************
-    
-    #Se pasa valor para utilizar luego en creación del PDF.
-    #Cargando url de la foto para demo.
-    df_personal["photo_url"] = "https://media.gettyimages.com/id/1365815844/es/foto/mexico-city-mexico-argentina-captain-diego-maradona-pictured-before-the-fifa-1986-world-cup.jpg?s=612x612&w=gi&k=20&c=vmUfSD2BY0_TQqFi8btORJj6OlNIBTvhkq1RrsY9kV4=" 
-    st.image(df_personal["photo_url"], width=200)
-    #Reordenando salida
-    df_personal = df_personal[["last_name", "first_name", "age", "birth_date", "gender", "nationality", "city", "phone"]]
+    # Acceso a datos individuales
+    player_row = df.iloc[0]
+    birth_date = player_row["birth_date"]
 
-    # --- Organizando datos de perfil del jugador ---
-    df_profile = df[["name", "number", "dominant_foot", "primary_position", "secondary_position", "height", "games_played", "total_minutes_played", "starter_games", "goals"]]
-    #Calcular Gol por 90 minutos
-    df_profile['goals_per_90'] = calculate_goals_per_90(df_profile["goals"], df_profile["total_minutes_played"])
-        
-    df_info1 = df_personal #Uso en creación de PDF
-    df_info2 = df_profile  #Uso en creación de PDF
+    # Datos personales
+    df_personal = pd.DataFrame({
+        "last_name": [player_row["last_name"]],
+        "first_name": [player_row["first_name"]],
+        "birth_date": [birth_date],
+        "gender": [player_row["gender"]],
+        "nationality": [player_row["nationality"]],
+        "city": [player_row["city"]],
+        "phone": [player_row["phone"]],
+        "age": [calculate_age(birth_date)]
+    })
 
-    #Preparando Info de Salida 
-    #df_personal
-    f_personal = df_personal.reset_index()
-    df_personal.columns = ["Personal Info", "Value"]
-    df_personal = df_personal.astype(str)
+    # Imagen de ejemplo fija
+    photo_url = "https://media.gettyimages.com/id/1365815844/es/foto/mexico-city-mexico-argentina-captain-diego-maradona.jpg?s=612x612"
+    st.image(photo_url, width=200)
 
-    f_profile = df_profile.reset_index()
-    df_profile.columns = ["Profile", "Value"]
-    df_profile = df_profile.astype(str)
-    # Organizar las tablas en una cuadrícula de 2x2 usando st.columns
+    # Datos de perfil
+    df_profile = pd.DataFrame({
+        "name": [player_row["name"]],
+        "number": [player_row["number"]],
+        "dominant_foot": [player_row["dominant_foot"]],
+        "primary_position": [player_row["primary_position"]],
+        "secondary_position": [player_row["secondary_position"]],
+        "height": [player_row["height"]],
+        "games_played": [player_row["games_played"]],
+        "total_minutes_played": [player_row["total_minutes_played"]],
+        "starter_games": [player_row["starter_games"]],
+        "goals": [player_row["goals"]],
+    })
+
+    df_profile["goals_per_90"] = calculate_goals_per_90(
+        player_row["goals"], player_row["total_minutes_played"]
+    )
+
+    # Reformateo para tablas Streamlit
+    df_personal_long = pd.melt(df_personal, var_name="Personal Info", value_name="Value").astype(str)
+    df_profile_long = pd.melt(df_profile, var_name="Profile", value_name="Value").astype(str)
+
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("GENERAL INFO", divider="red")
-        # Aplicando estilo para ocultar la cabecera
-        st.dataframe(df_personal, hide_index=True)
+        st.dataframe(df_personal_long, hide_index=True)
     with col2:
         st.subheader("PLAYER PROFILE & STATS", divider="red")
-        st.dataframe(df_profile, hide_index=True)
-    
+        st.table(df_profile_long)
+
     col3, col4 = st.columns(2)
     with col3:
         st.subheader("PLAYER PERFORMANCE", divider="green")
-        #st.plotly_chart(radar_chart(), use_container_width=True)    
-        placeholder = st.empty()
-        placeholder.write(radar_chart())
+        st.plotly_chart(radar_chart(), use_container_width=True)
     with col4:
         st.subheader("ANALYSIS BY SKILLS", divider="blue")
         data = {
@@ -201,32 +146,27 @@ def Show_Player_Info():
         }
         df_an = pd.DataFrame(data)
         st.dataframe(df_an, hide_index=True)
-       
-#*********************************FIN Show_Player_Info()*********************************************************
 
-    # En el sidebar, se coloca un botón para generar el informe PDF
+    # Preparar PDF
     empty_df = pd.DataFrame()
-
     player_data = {
-        "first_name": df["first_name"],
-        "last_name": df["last_name"],
-        "birth_date": df["birth_date"],
-        "nationality": df["nationality"],
-        "primary_position": df["primary_position"],
-        "secondary_position": df["secondary_position"],
-        "number": df["number"],
-        "dominant_foot": df["dominant_foot"],
-        "height": df["height"],
+        "first_name": player_row["first_name"],
+        "last_name": player_row["last_name"],
+        "birth_date": player_row["birth_date"],
+        "nationality": player_row["nationality"],
+        "primary_position": player_row["primary_position"],
+        "secondary_position": player_row["secondary_position"],
+        "number": player_row["number"],
+        "dominant_foot": player_row["dominant_foot"],
+        "height": player_row["height"],
         "education_level": "High School",
         "school_name": "Soccer Central SA",
-        "photo_url": df["photo_url"],
-        "notes": df.get("notes", ""),
-        "player_activity_history": df.get("player_activity_history", "")
+        "photo_url": photo_url,
+        "notes": player_row.get("notes", ""),
+        "player_activity_history": player_row.get("player_activity_history", "")
     }
 
-    # Inicializa el estado si no existe para mostrar el boton download y generar el pdf posteriormente
     if st.button(" Download Player Report"):
-
         with st.spinner("⏳ Generating PDF... Please wait"):
             pdf_buffer = generate_player_report(
                 player_data=player_data,
@@ -238,15 +178,13 @@ def Show_Player_Info():
                 player_documents=empty_df
             )
 
-        pdf_bytes = pdf_buffer.getvalue() 
+        pdf_bytes = pdf_buffer.getvalue()
         b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
         pdf_filename = f"player_report_{player_data['last_name']}.pdf"
 
-        # Enlace de respaldo visible
         href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Click here if download doesn\'t start</a>'
         st.success("Report generated!")
 
-        # Autodescarga simulada usando HTML/JS
         js = f"""
         <script>
             const link = document.createElement('a');
@@ -260,10 +198,11 @@ def Show_Player_Info():
         st.components.v1.html(js, height=0)
         st.markdown(href, unsafe_allow_html=True)
 
-def main():
 
+def main():
     Setup_page()
-    Show_Player_Info() 
+    Show_Player_Info()
+
 
 if __name__ == "__main__":
-    main() 
+    main()
