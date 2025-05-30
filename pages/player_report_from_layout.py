@@ -11,6 +11,7 @@ from sc_app.create_report import create_pdf
 import random
 import plotly.express as px
 from utils.pdf_generator  import generate_player_report
+import base64
 
 
 # Función para inicializar la conexión a la base de datos y cachearla
@@ -224,42 +225,40 @@ def Show_Player_Info():
     }
 
     # Inicializa el estado si no existe para mostrar el boton download y generar el pdf posteriormente
-    if "pdf_ready" not in st.session_state:
-        st.session_state["pdf_ready"] = False
-    if "pdf_buffer" not in st.session_state:
-        st.session_state["pdf_buffer"] = None
-    if "pdf_generating" not in st.session_state:
-        st.session_state["pdf_generating"] = False
+    if st.button(" Download Player Report"):
 
-    # Mostrar botón con lógica condicional
-    if not st.session_state["pdf_ready"]:
-        if st.session_state["pdf_generating"]:
-            st.info("Generating report... Please wait.")
-        else:
-            if st.button("📄 Generate Player Report"):
-                st.session_state["pdf_generating"] = True
-                with st.spinner("Generating PDF report..."):
-                    pdf_buffer = generate_player_report(
-                        player_data=player_data,
-                        player_teams=empty_df,
-                        player_games=empty_df,
-                        player_metrics=empty_df,
-                        player_evaluations=empty_df,
-                        player_videos=empty_df,
-                        player_documents=empty_df
-                    )
-                    st.session_state["pdf_buffer"] = pdf_buffer
-                    st.session_state["pdf_ready"] = True
-                    st.session_state["pdf_generating"] = False
-                    st.rerun()  # <- Refresca la página para mostrar el botón de descarga
+        with st.spinner("⏳ Generating PDF... Please wait"):
+            pdf_buffer = generate_player_report(
+                player_data=player_data,
+                player_teams=empty_df,
+                player_games=empty_df,
+                player_metrics=empty_df,
+                player_evaluations=empty_df,
+                player_videos=empty_df,
+                player_documents=empty_df
+            )
 
-    else:
-        st.download_button(
-            label="⬇ Download PDF Report",
-            data=st.session_state["pdf_buffer"],
-            file_name=f"player_report_{player_data['last_name']}.pdf",
-            mime="application/pdf"
-        )
+        pdf_bytes = pdf_buffer.getvalue() 
+        b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+        pdf_filename = f"player_report_{player_data['last_name']}.pdf"
+
+        # Enlace de respaldo visible
+        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Click here if download doesn\'t start</a>'
+        st.success("Report generated!")
+
+        # Autodescarga simulada usando HTML/JS
+        js = f"""
+        <script>
+            const link = document.createElement('a');
+            link.href = 'data:application/pdf;base64,{b64_pdf}';
+            link.download = '{pdf_filename}';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        </script>
+        """
+        st.components.v1.html(js, height=0)
+        st.markdown(href, unsafe_allow_html=True)
 
 def main():
 
