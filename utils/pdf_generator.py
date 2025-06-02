@@ -524,16 +524,19 @@ class PlayerReportPDF(FPDF):
         self.cell(140, 8, f"Nationality: {player_data['nationality']}", 0, 1, 'L')
         
         try:
-            if player_data.get('photo_url') and player_data['photo_url'].startswith(('http://', 'https://')):
+            photo_url = player_data.get('photo_url')
+            if photo_url and isinstance(photo_url, str) and photo_url.startswith(('http://', 'https://')):
                 self.set_fill_color(255, 255, 255)
                 self.rounded_rect(10, 10, 45, 45, 5, 'F')
-                
-                response = requests.get(player_data['photo_url'])
+
+                response = requests.get(photo_url, timeout=5)
                 if response.status_code == 200:
                     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmpfile:
                         tmpfile.write(response.content)
-                        self.image(tmpfile.name, 10, 10, 45, 45)
-                        os.unlink(tmpfile.name)
+                        tmpfile.flush()
+                        img_path = tmpfile.name
+                    self.image(img_path, 10, 10, 45, 45)
+                    os.remove(img_path)
             elif player_data.get('photo_url'):
                 self.set_fill_color(255, 255, 255)
                 self.rounded_rect(10, 10, 45,45, 5, 'F')
