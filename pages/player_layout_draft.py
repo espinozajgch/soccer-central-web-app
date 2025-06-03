@@ -30,6 +30,7 @@ def Setup_page():
     #                    )
     #Definición de Título y Descripción de Página
     #Creación del Look and Feel de la Página
+    login.generarLogin() # solucion a desaparacion del menu
     logo = "./assets/images/soccer-central.png"
     st.sidebar.image(logo, width=350)
 
