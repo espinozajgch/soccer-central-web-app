@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 from auth import get_user
-from db import check_password, hash_password
+from db import check_password, hash_password, engine
+from sqlalchemy.orm import Session
+from models import Users
 
 # Validación simple de usuario y clave con un archivo csv
 
@@ -64,7 +66,7 @@ def generarMenu(usuario):
         st.page_link("pages/byga_page.py", label="Byga", icon=":material/sports_soccer:")
         st.page_link("pages/taka_page.py", label="Taka", icon=":material/videocam:")
         st.subheader(":material/manage_accounts: Administrador")
-        st.page_link("pages/players.py", label="Jugadores", icon=":material/account_circle:")
+        st.page_link("pages/admin_edit_player.py", label="Jugadores", icon=":material/account_circle:")
 
         st.divider()
 
@@ -109,3 +111,10 @@ def generarLogin():
                         st.rerun()
                     else:
                         st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
+
+def get_logged_in_user():
+    if "usuario" not in st.session_state:
+        return None
+
+    with Session(engine) as session:
+        return session.query(Users).filter(Users.email == st.session_state["usuario"]).first()
