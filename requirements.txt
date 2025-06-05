@@ -7,9 +7,9 @@ cffi>=1.15.1
 seaborn==0.13.2
 streamlit==1.42.2
 SQLAlchemy~=2.0.40
-mysql-connector-python==8.3.0
 reportlab==4.1.0  # Para generación de PDF más complejos
 fpdf==1.7.2       # Alternativa ligera para PDFs
 plotly
 numpy
 requests==2.31.0
+mysql-connector-python==8.3.0

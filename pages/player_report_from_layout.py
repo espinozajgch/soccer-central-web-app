@@ -1,22 +1,13 @@
 import streamlit as st
 from utils import login
-import pandas as pd
-import numpy as np
-import pymysql
-pymysql.install_as_MySQLdb()
 from datetime import datetime
 from utils.pdf_generator import generate_player_report
 import random
 import plotly.express as px
 import base64
-
-def connect_to_db():
-    try:
-        return st.connection('mysql', type='sql')
-    except Exception as e:
-        st.error("Error al conectar con la base de datos:")
-        st.error(e)
-        return None
+from sqlalchemy.orm import Session
+from models import Users, Players
+from db import engine  # Asegúrate de tener tu engine SQLAlchemy configurado
 
 def calculate_age(birth_date):
     today = datetime.today()
@@ -26,11 +17,9 @@ def calculate_goals_per_90(goals, minutes_played):
     return (goals / minutes_played) * 90 if minutes_played else 0
 
 def radar_chart():
-    dfx = pd.DataFrame(dict(
-        r=[random.randint(60, 95) for _ in range(6)],
-        theta=['On Ball', 'Intelligence', 'Shot', 'Defensive', 'Aerial', 'Physical']
-    ))
-    fig = px.line_polar(dfx, r='r', theta='theta', line_close=True, template="plotly_dark")
+    categories = ['On Ball', 'Intelligence', 'Shot', 'Defensive', 'Aerial', 'Physical']
+    values = [random.randint(60, 95) for _ in categories]
+    fig = px.line_polar(r=values, theta=categories, line_close=True, template="plotly_dark")
     return fig
 
 def Setup_page():
@@ -38,148 +27,133 @@ def Setup_page():
     logo = "./assets/images/soccer-central.png"
     st.sidebar.image(logo, width=350)
 
-    # Estilos personalizados desde CSS externo
     with open("./assets/css/styles.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
     main_bg_color = st.sidebar.color_picker("**Choose Background Color for Principal Panel**", "#EDF4F5")
     sidebar_bg_color = st.sidebar.color_picker("**Choose Background Color for Sidebar Panel**", "#D0DEE2")
 
-    st.markdown(
-        f"""
+    st.markdown(f"""
         <style>
-        [data-testid="stAppViewContainer"] {{
-            background-color: {main_bg_color};
-        }}
-        [data-testid="stSidebar"] {{
-            background-color: {sidebar_bg_color};
-        }}
+        [data-testid="stAppViewContainer"] {{ background-color: {main_bg_color}; }}
+        [data-testid="stSidebar"] {{ background-color: {sidebar_bg_color}; }}
         </style>
-        """,
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
 def Show_Player_Info():
-    dbconn = connect_to_db()
     st.header("360° PLAYER DATA", divider="gray")
 
-    df_users = dbconn.query("SELECT * FROM users WHERE role_id = 4 ORDER BY last_name", ttl=3600)
-    df_users["full_name"] = df_users["first_name"] + " " + df_users["last_name"]
+    with Session(engine) as session:
+        users = session.query(Users).filter(Users.role_id == 4).order_by(Users.last_name).all()
+        user_options = [f"{u.first_name} {u.last_name}" for u in users]
+        selected_name = st.selectbox("Choose Player", user_options)
 
-    selected_name = st.selectbox("Choose Player", df_users["full_name"])
-    selected_user = df_users[df_users["full_name"] == selected_name].iloc[0]
+        selected_user = next(u for u in users if f"{u.first_name} {u.last_name}" == selected_name)
+        player = selected_user.players[0] if selected_user.players else None
 
-    # Datos personales
-    birth_date = selected_user["birth_date"]
-    df_personal = pd.DataFrame({
-        "Last name": [selected_user["last_name"]],
-        "First name": [selected_user["first_name"]],
-        "Birth date": [birth_date],
-        "Gender": [selected_user["gender"]],
-        "Nationality": [selected_user["country"]],
-        "Phone": [selected_user["phone"]],
-        "Age": [calculate_age(birth_date)]
-    })
+        # Foto
+        photo_url = selected_user.photo_url or "https://via.placeholder.com/200x250?text=No+Photo"
+        st.image(photo_url, width=200)
 
-    # Foto
-    photo_url = selected_user["photo_url"] or "https://via.placeholder.com/200x250?text=No+Photo"
-    st.image(photo_url, width=200)
+        # Datos personales
+        birth_date = selected_user.birth_date
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("GENERAL INFO", divider="red")
+            st.markdown(f"""
+            - **Last name**: {selected_user.last_name}
+            - **First name**: {selected_user.first_name}
+            - **Birth date**: {birth_date}
+            - **Gender**: {selected_user.gender}
+            - **Nationality**: {selected_user.country}
+            - **Phone**: {selected_user.phone}
+            - **Age**: {calculate_age(birth_date)}
+            """)
 
-    # Perfil simulado
-    df_profile = pd.DataFrame({
-        "Name": [selected_user["full_name"]],
-        "Number": [random.randint(1, 99)],
-        "Dominant foot": ["Right"],
-        "Primary position": ["Midfielder"],
-        "Secondary position": ["Winger"],
-        "Height": [random.randint(165, 190)],
-        "Games Played": [random.randint(10, 30)],
-        "Total minutes played": [random.randint(800, 2700)],
-        "Starter games": [random.randint(5, 20)],
-        "Goals": [random.randint(1, 10)],
-    })
+        # Perfil (simulado o real si hay)
+        with col2:
+            st.subheader("PLAYER PROFILE & STATS", divider="red")
+            number = player.number if player else random.randint(1, 99)
+            dominant_foot = player.dominant_foot if player else "Right"
+            primary_position = player.primary_position if player else "Midfielder"
+            secondary_position = player.secondary_position if player else "Winger"
+            height = player.height if player else random.randint(165, 190)
+            games_played = random.randint(10, 30)
+            minutes_played = random.randint(800, 2700)
+            starter_games = random.randint(5, 20)
+            goals = random.randint(1, 10)
+            goals_per_90 = calculate_goals_per_90(goals, minutes_played)
 
-    df_profile["goals_per_90"] = calculate_goals_per_90(
-        df_profile["Goals"][0], df_profile["Total minutes played"][0]
-    )
+            st.markdown(f"""
+            - **Name**: {selected_name}
+            - **Number**: {number}
+            - **Dominant foot**: {dominant_foot}
+            - **Primary position**: {primary_position}
+            - **Secondary position**: {secondary_position}
+            - **Height**: {height} cm
+            - **Games Played**: {games_played}
+            - **Total minutes played**: {minutes_played}
+            - **Starter games**: {starter_games}
+            - **Goals**: {goals}
+            - **Goals per 90 minutes**: {goals_per_90:.2f}
+            """)
 
-    df_personal_long = pd.melt(df_personal, var_name="Personal Info", value_name="Value").astype(str)
-    df_profile_long = pd.melt(df_profile, var_name="Profile", value_name="Value").astype(str)
+        # Radar y habilidades
+        col3, col4 = st.columns(2)
+        with col3:
+            st.subheader("PLAYER PERFORMANCE", divider="green")
+            st.plotly_chart(radar_chart(), use_container_width=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("GENERAL INFO", divider="red")
-        st.dataframe(df_personal_long, hide_index=True)
-    with col2:
-        st.subheader("PLAYER PROFILE & STATS", divider="red")
-        st.dataframe(df_profile_long, hide_index=True, use_container_width=True)
-
-    col3, col4 = st.columns(2)
-    with col3:
-        st.subheader("PLAYER PERFORMANCE", divider="green")
-        st.plotly_chart(radar_chart(), use_container_width=True)
-    with col4:
-        st.subheader("ANALYSIS BY SKILLS", divider="blue")
-        data = {
-            "Skill": ["On Ball", "Intelligence", "Shot", "Defensive", "Aerial", "Physical"],
-            "Description": [
-                "Displays exceptional ball control and agility when dribbling.",
-                "Exhibits outstanding game vision and anticipates plays effectively.",
-                "Possesses a powerful and accurate shot, making the most of scoring opportunities.",
-                "Shows solid defensive strategies with impressive marking and interception skills.",
-                "Excels in aerial duels, leveraging timing and positioning to win headers.",
-                "Demonstrates superior physical strength and endurance in duels."
+        with col4:
+            st.subheader("ANALYSIS BY SKILLS", divider="blue")
+            skills = [
+                ("On Ball", "Displays exceptional ball control and agility."),
+                ("Intelligence", "Outstanding vision and play anticipation."),
+                ("Shot", "Powerful and accurate shooting."),
+                ("Defensive", "Great marking and interception."),
+                ("Aerial", "Strong in aerial duels."),
+                ("Physical", "Superior strength and endurance.")
             ]
+            for skill, desc in skills:
+                st.markdown(f"- **{skill}**: {desc}")
+
+        # Datos para el PDF
+        player_data = {
+            "first_name": selected_user.first_name,
+            "last_name": selected_user.last_name,
+            "birth_date": selected_user.birth_date,
+            "nationality": selected_user.country,
+            "primary_position": primary_position,
+            "secondary_position": secondary_position,
+            "number": number,
+            "dominant_foot": dominant_foot,
+            "height": height,
+            "education_level": player.education_level if player else "High School",
+            "school_name": player.school_name if player else "Soccer Central SA",
+            "photo_url": photo_url,
+            "notes": player.notes if player else "",
+            "player_activity_history": player.player_activity_history if player else ""
         }
-        df_an = pd.DataFrame(data)
-        st.dataframe(df_an, hide_index=True)
 
-    player_data = {
-        "first_name": selected_user["first_name"],
-        "last_name": selected_user["last_name"],
-        "birth_date": selected_user["birth_date"],
-        "nationality": selected_user["country"],
-        "primary_position": "Midfielder",
-        "secondary_position": "Winger",
-        "number": df_profile["Number"][0],
-        "dominant_foot": "Right",
-        "height": df_profile["Height"][0],
-        "education_level": "High School",
-        "school_name": "Soccer Central SA",
-        "photo_url": photo_url,
-        "notes": "",
-        "player_activity_history": ""
-    }
+        if st.button(" Download Player Report"):
+            with st.spinner("⏳ Generating PDF... Please wait"):
+                pdf_buffer = generate_player_report(
+                    player_data=player_data,
+                    player_teams=[], player_games=[], player_metrics=[],
+                    player_evaluations=[], player_videos=[], player_documents=[]
+                )
 
-    if st.button(" Download Player Report"):
-        with st.spinner("⏳ Generating PDF... Please wait"):
-            pdf_buffer = generate_player_report(
-                player_data=player_data,
-                player_teams=pd.DataFrame(),
-                player_games=pd.DataFrame(),
-                player_metrics=pd.DataFrame(),
-                player_evaluations=pd.DataFrame(),
-                player_videos=pd.DataFrame(),
-                player_documents=pd.DataFrame()
+            pdf_bytes = pdf_buffer.getvalue()
+            b64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
+            pdf_filename = f"player_report_{player_data['last_name']}.pdf"
+
+            st.success("Report generated!")
+            st.download_button(
+                label="📥 Download PDF Report",
+                data=pdf_buffer.getvalue(),
+                file_name=f"player_report_{player_data['last_name']}.pdf",
+                mime="application/pdf"
             )
-
-        pdf_bytes = pdf_buffer.getvalue()
-        b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-        pdf_filename = f"player_report_{player_data['last_name']}.pdf"
-
-        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Click here if download doesn\'t start</a>'
-        st.success("Report generated!")
-        st.components.v1.html(f"""
-            <script>
-                const link = document.createElement('a');
-                link.href = 'data:application/pdf;base64,{b64_pdf}';
-                link.download = '{pdf_filename}';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            </script>
-        """, height=0)
-        st.markdown(href, unsafe_allow_html=True)
 
 def main():
     Setup_page()
