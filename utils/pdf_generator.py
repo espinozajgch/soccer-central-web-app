@@ -489,14 +489,28 @@ class PlayerReportPDF(FPDF):
             self.ln()
         
         self.ln(4)
-    
+
     def add_plot(self, fig, width=190, height=100):
+        # Crear archivo temporal sin borrado automático
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-            fig.savefig(tmpfile.name, format='png', dpi=300, bbox_inches='tight', facecolor='white')
-            self.image(tmpfile.name, x=10, w=width, h=height)
+            tmpfile_path = tmpfile.name  # Guardar ruta antes de cerrar el contexto
+
+        try:
+            # Guardar figura
+            fig.savefig(tmpfile_path, format='png', dpi=300, bbox_inches='tight', facecolor='white')
+            plt.close(fig)  # Cerrar la figura para liberar recursos
+
+            # Insertar en el PDF
+            self.image(tmpfile_path, x=10, w=width, h=height)
             self.ln(height + 10)
-            plt.close(fig)
-            os.unlink(tmpfile.name)
+
+        finally:
+            # Borrar el archivo solo si existe y ya no está en uso
+            if os.path.exists(tmpfile_path):
+                try:
+                    os.remove(tmpfile_path)
+                except Exception as e:
+                    print(f"⚠️ No se pudo borrar el archivo temporal: {e}")
     
     def add_player_header(self, player_data):
         self.set_fill_color(26, 54, 93)
@@ -531,12 +545,20 @@ class PlayerReportPDF(FPDF):
 
                 response = requests.get(photo_url, timeout=5)
                 if response.status_code == 200:
-                    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmpfile:
-                        tmpfile.write(response.content)
-                        tmpfile.flush()
-                        img_path = tmpfile.name
-                    self.image(img_path, 10, 10, 45, 45)
-                    os.remove(img_path)
+                    try:
+                        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmpfile:
+                            tmpfile.write(response.content)
+                            tmpfile.flush()
+                            img_path = tmpfile.name
+
+                        self.image(img_path, x=10, y=10, w=45, h=45)
+
+                    finally:
+                        if os.path.exists(img_path):
+                            try:
+                                os.remove(img_path)
+                            except Exception as e:
+                                print(f"⚠️ No se pudo borrar la imagen temporal: {e}")
             elif player_data.get('photo_url'):
                 self.set_fill_color(255, 255, 255)
                 self.rounded_rect(10, 10, 45,45, 5, 'F')

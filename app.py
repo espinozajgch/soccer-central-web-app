@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pymysql
-pymysql.install_as_MySQLdb()
 from utils import login
 
 st.set_page_config(
