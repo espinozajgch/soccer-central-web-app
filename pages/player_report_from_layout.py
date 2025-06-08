@@ -5,12 +5,17 @@ from utils.pdf_generator import generate_player_report
 import random
 import plotly.express as px
 import base64
-
+import plotly.graph_objects as go
 from sqlalchemy.orm import Session
 from models import Users, Players
 from db import engine  # Asegúrate de tener tu engine SQLAlchemy configurado
+import plotly.graph_objects as go
+import random
 
 login.generarLogin()
+
+if "usuario" not in st.session_state:
+    st.stop()
 
 def calculate_age(birth_date):
     today = datetime.today()
@@ -22,7 +27,24 @@ def calculate_goals_per_90(goals, minutes_played):
 def radar_chart():
     categories = ['On Ball', 'Intelligence', 'Shot', 'Defensive', 'Aerial', 'Physical']
     values = [random.randint(60, 95) for _ in categories]
-    fig = px.line_polar(r=values, theta=categories, line_close=True, template="plotly_dark")
+    # Cerramos el radar uniendo el primer punto
+    values.append(values[0])
+    categories.append(categories[0])
+
+    fig = go.Figure(
+        data=[
+            go.Scatterpolar(
+                r=values,
+                theta=categories,
+                fill='toself',
+                name='Player Performance',
+                line_color='lime'
+            )
+        ]
+    )
+
+    
+
     return fig
 
 def Show_Player_Info():

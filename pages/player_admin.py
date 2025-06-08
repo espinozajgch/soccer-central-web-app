@@ -4,54 +4,13 @@ from models import Users, Players
 from db import engine
 from utils import login
 
+# 🔐 Verificación de sesión
+login.generarLogin()
 
-def Setup_page():
-    login.generarLogin()
-    # Configuración de la página
-    # Configuración título de página.
-    # st.set_page_config(page_title="Player Layout Draft", page_icon=":soccer:",
-    #                    layout="centered",initial_sidebar_state="auto",
-    #                    menu_items={
-    #                        'Get Help': 'https://soccercentralsa.byga.net',
-    #                        'About': """
-    #                             ## Acerca de la Aplicación
+if "usuario" not in st.session_state:
+    st.stop()
 
-    #                             **Soccer Central Web App** es una aplicación desarrollada para facilitar el análisis del rendimiento deportivo de los jugadores de la academia Soccer Central.
-
-    #                             - **Desarrollado con:** Streamlit
-    #                             - **Versión:** 1.0
-    #                             - **Contacto:** support@soccercentral.com
-    #                             """
-    #                         }
-    #                    )
-    # Definición de Título y Descripción de Página
-    # Creación del Look and Feel de la Página
-    logo = "./assets/images/soccer-central.png"
-    st.sidebar.image(logo, width=350)
-
-    # ******************************************Feature Provisional para Demo**************************************************************
-    # En el sidebar, el usuario selecciona los colores de fondo para cada panel
-    main_bg_color = st.sidebar.color_picker("**Choose Background Color for Principal Panel**", "#EDF4F5")
-    sidebar_bg_color = st.sidebar.color_picker("**Choose Background Color for Sidebar Panel**", "#D0DEE2")
-    # Inyectando CSS para personalizar los fondos utilizando los colores seleccionados
-    st.markdown(
-        f"""
-        <style>
-        /* Contenedor principal */
-        [data-testid="stAppViewContainer"] {{
-            background-color: {main_bg_color};
-
-        }}
-        /* Sidebar */
-        [data-testid="stSidebar"] {{
-            background-color: {sidebar_bg_color};
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    # **************************************FIN de Feature Provisional para Demo***********************************************************
-
+st.header("Administrar :orange[Jugadores]", divider=True)
 
 def Edit_Player_Info():
     current_user = login.get_logged_in_user()
@@ -61,7 +20,7 @@ def Edit_Player_Info():
         st.error("Access denied. Only admin users can access this page.")
         return
 
-    st.title("🛠️ Edit Player Info")
+    st.text("🛠️ Edit Player Info")
 
     with Session(engine) as session:
         # Obtener todos los jugadores
@@ -112,7 +71,6 @@ def Edit_Player_Info():
                 session.rollback()
                 st.error(f"An error occurred: {e}")
 def main():
-    Setup_page()
     Edit_Player_Info()
 
 if __name__ == "__main__":

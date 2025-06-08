@@ -8,6 +8,9 @@ from models import Users, Players, PlayerGameStats
 
 login.generarLogin()
 
+if "usuario" not in st.session_state:
+    st.stop()
+
 def Show_Player_Info():
     #Este módulo integra la información base del jugador.
     #Se captura data desde DB en AWS con información normalizada.
@@ -73,7 +76,6 @@ def Show_Player_Info():
         # Separar campos para visualizadores
         general_fields = {
             "Last Name": registro.user.last_name,
-            #"User ID": registro.user.user_id,
             "First Name": registro.user.first_name,
             "Birth Date": registro.user.birth_date,
             "Age": registro.user.age,
@@ -96,27 +98,7 @@ def Show_Player_Info():
     else:
         st.info("No se encontraron datos para mostrar.")
     
-    #Inyectar CSS personalizado
-    st.markdown(
-        """
-        <style>
-        /* Estilos para las claves (labels) */
-        .key-text {
-            font-size: 26px;
-            color: #333333;
-            font-weight: bold;
-        }
-        /* Estilos para los valores */
-        .value-text {
-            font-size: 24px;
-            color: #333333;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )   
-    
-    
+        
     # Crear dos columnas: panel izquierdo (datos personales y foto), 
     # panel derecho (datos con mayor enfoque al seguimiento por la academia).
     col_left, col_right = st.columns(2)

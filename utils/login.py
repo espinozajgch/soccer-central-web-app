@@ -49,10 +49,10 @@ def generarMenu(usuario):
         dfusuarios = pd.read_csv('usuarios.csv')
 
         # Filtramos la tabla de usuarios
-        dfUsuario =dfusuarios[(dfusuarios['usuario']==usuario)]
+        #dfUsuario =dfusuarios[(dfusuarios['usuario']==usuario)]
         
         # Cargamos el nombre del usuario
-        nombre= st.session_state.usuario
+        nombre= usuario
         
         #Mostramos el nombre del usuario
         st.write(f"Hola **:blue-background[{nombre}]** ")
@@ -60,13 +60,16 @@ def generarMenu(usuario):
         # Mostramos los enlaces de páginas
         st.page_link("app.py", label="Inicio", icon=":material/home:")
         st.subheader(":material/dashboard: Tableros")
-        st.page_link("pages/player_layout_draft.py", label="360", icon=":material/contacts:")
+        st.page_link("pages/player.py", label="360", icon=":material/contacts:")
         st.page_link("pages/player_report_from_layout.py", label="REPORTS", icon=":material/picture_as_pdf:")
-        st.page_link("pages/Achamp_page.py", label="Achamps", icon=":material/bar_chart:")
+
+        st.subheader(":material/manage_accounts: Administrador")
+
+        st.page_link("pages/achamp_page.py", label="Achamps", icon=":material/bar_chart:")
         st.page_link("pages/byga_page.py", label="Byga", icon=":material/sports_soccer:")
         st.page_link("pages/taka_page.py", label="Taka", icon=":material/videocam:")
-        st.subheader(":material/manage_accounts: Administrador")
-        st.page_link("pages/admin_edit_player.py", label="Jugadores", icon=":material/account_circle:")
+        
+        st.page_link("pages/player_admin.py", label="Jugadores", icon=":material/account_circle:")
 
         st.divider()
 
@@ -87,17 +90,17 @@ def generarLogin():
     # 🔄 Restaurar sesión desde la URL si existe
     usuario_actual = st.query_params.get("user")
     if usuario_actual and "usuario" not in st.session_state:
-        st.session_state['usuario'] = usuario_actual
+        st.session_state['usuario'] = usuario_actual['username']
 
     if 'usuario' in st.session_state:
-        st.query_params.update({"user": st.session_state["usuario"]})
+        st.query_params.update({"user": [st.session_state["usuario"]]})
         generarMenu(st.session_state['usuario'])
     else:
-        col1, col2, col3 = st.columns([2, 1.5, 2])
+        col1, col2, col3 = st.columns([1.5, 2.5, 1.5])
         with col2:
             st.logo("assets/images/soccer-central.png", size="large")
 
-        col1, col2, col3 = st.columns([2, 1.5, 2])
+        col1, col2, col3 = st.columns([1.5, 2.5, 1.5])
         with col2:
             with st.form('frmLogin'):
                 parUsuario = st.text_input('Usuario')
@@ -107,7 +110,7 @@ def generarLogin():
                 if btnLogin:
                     if validarUsuario(parUsuario, parPassword):
                         st.session_state['usuario'] = parUsuario
-                        st.query_params.update({'user': parUsuario})  # persistencia en URL
+                        st.query_params.update({'user': [parUsuario]})  # persistencia en URL
                         st.rerun()
                     else:
                         st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
