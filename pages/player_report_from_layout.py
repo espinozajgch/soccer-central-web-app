@@ -10,6 +10,8 @@ import random
 import plotly.express as px
 import base64
 
+login.generarLogin()
+
 def connect_to_db():
     try:
         return st.connection('mysql', type='sql')
@@ -33,31 +35,6 @@ def radar_chart():
     fig = px.line_polar(dfx, r='r', theta='theta', line_close=True, template="plotly_dark")
     return fig
 
-def Setup_page():
-    login.generarLogin()
-    logo = "./assets/images/soccer-central.png"
-    st.sidebar.image(logo, width=350)
-
-    # Estilos personalizados desde CSS externo
-    with open("./assets/css/styles.css") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-    main_bg_color = st.sidebar.color_picker("**Choose Background Color for Principal Panel**", "#EDF4F5")
-    sidebar_bg_color = st.sidebar.color_picker("**Choose Background Color for Sidebar Panel**", "#D0DEE2")
-
-    st.markdown(
-        f"""
-        <style>
-        [data-testid="stAppViewContainer"] {{
-            background-color: {main_bg_color};
-        }}
-        [data-testid="stSidebar"] {{
-            background-color: {sidebar_bg_color};
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
 
 def Show_Player_Info():
     dbconn = connect_to_db()
@@ -182,7 +159,6 @@ def Show_Player_Info():
         st.markdown(href, unsafe_allow_html=True)
 
 def main():
-    Setup_page()
     Show_Player_Info()
 
 if __name__ == "__main__":

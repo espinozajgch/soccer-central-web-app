@@ -6,59 +6,7 @@ from datetime import datetime
 from db import SessionLocal
 from models import Users, Players, PlayerGameStats
 
-
-
-
-
-def Setup_page():
-    # Configuración de la página
-    # Configuración título de página.
-    # st.set_page_config(page_title="Player Layout Draft", page_icon=":soccer:", 
-    #                    layout="centered",initial_sidebar_state="auto",
-    #                    menu_items={
-    #                        'Get Help': 'https://soccercentralsa.byga.net',
-    #                        'About': """
-    #                             ## Acerca de la Aplicación
-                                
-    #                             **Soccer Central Web App** es una aplicación desarrollada para facilitar el análisis del rendimiento deportivo de los jugadores de la academia Soccer Central.
-                                
-    #                             - **Desarrollado con:** Streamlit  
-    #                             - **Versión:** 1.0  
-    #                             - **Contacto:** support@soccercentral.com
-    #                             """
-    #                         }
-    #                    )
-    #Definición de Título y Descripción de Página
-    #Creación del Look and Feel de la Página
-    login.generarLogin() # solucion a desaparacion del menu
-    logo = "./assets/images/soccer-central.png"
-    st.sidebar.image(logo, width=350)
-
-
-    #******************************************Feature Provisional para Demo**************************************************************
-    # En el sidebar, el usuario selecciona los colores de fondo para cada panel
-    main_bg_color = st.sidebar.color_picker("**Choose Background Color for Principal Panel**", "#EDF4F5")
-    sidebar_bg_color = st.sidebar.color_picker("**Choose Background Color for Sidebar Panel**", "#D0DEE2")
-    # Inyectando CSS para personalizar los fondos utilizando los colores seleccionados
-    st.markdown(
-        f"""
-        <style>
-        /* Contenedor principal */
-        [data-testid="stAppViewContainer"] {{
-            background-color: {main_bg_color};
-            
-        }}
-        /* Sidebar */
-        [data-testid="stSidebar"] {{
-            background-color: {sidebar_bg_color};
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    #**************************************FIN de Feature Provisional para Demo***********************************************************
-
-
+login.generarLogin()
 
 def Show_Player_Info():
     #Este módulo integra la información base del jugador.
@@ -80,7 +28,7 @@ def Show_Player_Info():
     df_players = session.query(Players).limit(10).all()
     player_ids = [player.player_id for player in df_players]
     # Crear un widget en el sidebar para que el usuario seleccione el player_id
-    selected_player_id = st.sidebar.selectbox("Choose Player", player_ids)
+    #selected_player_id = st.sidebar.selectbox("Choose Player", player_ids)
     
     #***********************Preparación de Consulta de Datos Personalizada y Elementos a Visualizar*************************************************************
     # Se seleccionan campos de la tabla "users" y la tabla "players".
@@ -91,7 +39,7 @@ def Show_Player_Info():
     #     df = player_ids dbconn.query(sql, params={"player_id": selected_player_id}, ttl=3600)
     # except Exception as e:
     #     st.error(f"Error durante la consulta: {e}")
-
+    selected_player_id = 1
     #************************Preparación elementos a visualizar y otros campos calculados*************************************************************
     if selected_player_id:
         # Convertir la primera fila a diccionario
@@ -209,8 +157,6 @@ def Show_Player_Info():
 
 
 def main():
-
-    Setup_page()
     Show_Player_Info() 
 
 if __name__ == "__main__":
