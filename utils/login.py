@@ -96,11 +96,10 @@ def generarLogin():
         st.query_params.update({"user": [st.session_state["usuario"]]})
         generarMenu(st.session_state['usuario'])
     else:
-        col1, col2, col3 = st.columns([1.5, 2.5, 1.5])
-        with col2:
-            st.logo("assets/images/soccer-central.png", size="large")
+        st.logo("assets/images/soccer-central.png", size="large")
 
-        col1, col2, col3 = st.columns([1.5, 2.5, 1.5])
+        col1, col2, col3 = st.columns([2, 2, 2])
+        
         with col2:
             with st.form('frmLogin'):
                 parUsuario = st.text_input('Usuario')
