@@ -1,8 +1,9 @@
 from typing import List, Optional
 
-from sqlalchemy import DECIMAL, Date, DateTime, ForeignKeyConstraint, Index, Integer, String, Text
+from sqlalchemy import DECIMAL, Date, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, String, Text
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from typing import Optional
 import datetime
 import decimal
 
@@ -142,6 +143,7 @@ class Players(Base):
     player_game_stats: Mapped[List['PlayerGameStats']] = relationship('PlayerGameStats', back_populates='player')
     player_teams: Mapped[List['PlayerTeams']] = relationship('PlayerTeams', back_populates='player')
     player_videos: Mapped[List['PlayerVideos']] = relationship('PlayerVideos', back_populates='player')
+    player_assessments: Mapped[list['PlayerAssessments']] = relationship('PlayerAssessments', back_populates='player')
 
 
 class Videos(Base):
@@ -294,3 +296,27 @@ class PlayerVideos(Base):
 
     player: Mapped[Optional['Players']] = relationship('Players', back_populates='player_videos')
     video: Mapped[Optional['Videos']] = relationship('Videos', back_populates='player_videos')
+
+
+class PlayerAssessments(Base):
+    __tablename__ = 'player_assessments'
+    __table_args__ = (
+        ForeignKeyConstraint(['player_id'], ['players.player_id'], name='player_assessments_ibfk_1'),
+        ForeignKeyConstraint(['coach_id'], ['users.user_id'], name='player_assessments_ibfk_2'),
+        Index('player_id', 'player_id'),
+        Index('coach_id', 'coach_id'),
+        {'comment': 'Evaluaciones realizadas a jugadores por parte de entrenadores (coaches) en distintas categorías'}
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, comment='ID único de la evaluación')
+    player_id: Mapped[Optional[int]] = mapped_column(Integer, comment='Jugador evaluado')
+    coach_id: Mapped[Optional[int]] = mapped_column(Integer, comment='Coach que realiza la evaluación')
+    category: Mapped[Optional[str]] = mapped_column(String(50), comment='Categoría de evaluación: technical, physical, mental')
+    item: Mapped[Optional[str]] = mapped_column(String(100), comment='Nombre del ítem evaluado, como Dribbling, Focus, etc.')
+    value: Mapped[Optional[str]] = mapped_column(String(50), comment='Valor asignado al ítem, puede ser un número o texto')
+    notes: Mapped[Optional[str]] = mapped_column(Text, comment='Notas adicionales del coach')
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow, comment='Fecha de creación del registro')
+
+    player: Mapped[Optional['Players']] = relationship('Players', back_populates='player_assessments')
+    coach: Mapped[Optional['Users']] = relationship('Users')
+
