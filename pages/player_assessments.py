@@ -34,7 +34,7 @@ def show_player_assessments_page():
     st.divider()
 
     st.subheader("Agregar nueva evaluación")
-    coach_id = session.query(Users).filter(Users.role.has(role_name="Coach")).first().user_id  # ⚠️ reemplazar con actual usuario coach si se tiene
+    coach_id = session.query(Users).filter(Users.email == st.session_state.usuario).first().user_id
     category = st.selectbox("Categoría", ["technical", "physical", "mental"])
     item = st.text_input("Ítem evaluado")
     value = st.text_input("Valor")
