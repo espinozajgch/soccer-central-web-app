@@ -118,3 +118,35 @@ player_teams = """
     JOIN teams t ON pt.team_id = t.team_id
     WHERE pt.player_id = :player_id;
 """
+
+#Consulta para escoger evaluación del jugador filtrado por último equipo.
+SQL_PLAYERS2 = """
+WITH latest_team AS (
+    SELECT pt.player_id,
+           pt.team_id
+    FROM player_teams pt
+    JOIN (
+        SELECT player_id,
+               MAX(COALESCE(end_date, '9999-12-31')) AS max_end
+        FROM player_teams
+        GROUP BY player_id
+    ) mx ON  mx.player_id = pt.player_id
+        AND COALESCE(pt.end_date, '9999-12-31') = mx.max_end
+)
+
+SELECT  p.player_id,
+        CONCAT(u.first_name, ' ', u.last_name)              AS full_name,
+        t.team_id,
+        t.name                                             AS team_name,
+        u.photo_url,
+        u.birth_date,
+        COALESCE(p.nationality,
+                 p.country_of_citizenship,
+                 p.country_of_birth)                        AS nationality
+FROM players        p
+JOIN users          u  ON u.user_id = p.user_id
+LEFT JOIN latest_team lt ON lt.player_id = p.player_id
+LEFT JOIN teams      t  ON t.team_id   = lt.team_id
+WHERE u.role_id = 4
+ORDER BY team_name IS NULL, team_name, full_name;
+"""
