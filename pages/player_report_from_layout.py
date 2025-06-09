@@ -18,6 +18,9 @@ if "usuario" not in st.session_state:
     st.stop()
 
 def calculate_age(birth_date):
+
+    if not birth_date:
+        return None
     today = datetime.today()
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
@@ -59,7 +62,7 @@ def Show_Player_Info():
         player = selected_user.players[0] if selected_user.players else None
 
         # Foto
-        photo_url = selected_user.photo_url or "https://via.placeholder.com/200x250?text=No+Photo"
+        photo_url = selected_user.photo_url or "https://placehold.co/600x400"
         st.image(photo_url, width=200)
 
         # Datos personales
