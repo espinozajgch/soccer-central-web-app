@@ -1,9 +1,14 @@
 import streamlit as st
 from sqlalchemy.orm import Session
 from db import SessionLocal
+from utils import login
 from models import PlayerAssessments, Players, Users
 import datetime
 
+def Setup_page():
+    login.generarLogin()
+    logo = "./assets/images/soccer-central.png"
+    st.sidebar.image(logo, width=350)
 
 def show_player_assessments_page():
     st.title("Evaluaciones de Jugadores")
@@ -51,3 +56,9 @@ def show_player_assessments_page():
         st.success("✅ Evaluación guardada correctamente")
         st.rerun()
 
+def main():
+    Setup_page()
+    show_player_assessments_page()
+
+if __name__ == "__main__":
+    main()
