@@ -55,25 +55,25 @@ def generarMenu(usuario):
         nombre= usuario
         
         #Mostramos el nombre del usuario
-        st.write(f"Hola **:blue-background[{nombre}]** ")
+        st.write(f"Hello **:blue-background[{nombre}]** ")
         
         # Mostramos los enlaces de páginas
-        st.page_link("app.py", label="Inicio", icon=":material/home:")
-        st.subheader(":material/dashboard: Tableros")
-        st.page_link("pages/player_report_from_layout.py", label="REPORTS", icon=":material/picture_as_pdf:")
+        st.page_link("app.py", label="Home", icon=":material/home:")
+        st.subheader(":material/dashboard: Dashboard")
+        st.page_link("pages/player_report_from_layout.py", label="Reports", icon=":material/picture_as_pdf:")
 
-        st.subheader(":material/manage_accounts: Administrador")
+        st.subheader(":material/manage_accounts: Administrator")
 
         st.page_link("pages/achamp_page.py", label="Achamps", icon=":material/bar_chart:")
         st.page_link("pages/byga_page.py", label="Byga", icon=":material/sports_soccer:")
         st.page_link("pages/taka_page.py", label="Taka", icon=":material/videocam:")
         
-        st.page_link("pages/player_admin.py", label="Jugadores", icon=":material/account_circle:")
+        st.page_link("pages/player_admin.py", label="Players", icon=":material/account_circle:")
 
         st.divider()
 
         # Botón para cerrar la sesión
-        btnSalir=st.button("Salir", type="tertiary", icon=":material/logout:")
+        btnSalir=st.button("Exit", type="tertiary", icon=":material/logout:")
         if btnSalir:
             cerrarSesion()
 
