@@ -37,30 +37,10 @@ def show_player_assessments_page():
     # Construimos la query dinámica
     query = session.query(Players).join(Users).filter(Players.user_id == Users.user_id)
 
-<<<<<<< Updated upstream
-    st.subheader("Agregar nueva evaluación")
-    coach_id = session.query(Users).filter(Users.role.has(role_name="Coach")).first().user_id  # ⚠️ reemplazar con actual usuario coach si se tiene
-    category = st.selectbox("Categoría", ["technical", "physical", "mental"])
-    item = st.text_input("Ítem evaluado")
-    value = st.text_input("Valor")
-    notes = st.text_area("Notas", placeholder="Notas adicionales del coach (opcional)")
-    btn = st.button("Guardar evaluación")
-
-    if btn:
-        nueva_eval = PlayerAssessments(
-            player_id=player_id,
-            coach_id=coach_id,
-            category=category,
-            item=item,
-            value=value,
-            notes=notes,
-            created_at=datetime.datetime.utcnow()
-=======
     if filtro_nombre:
         query = query.filter(
             (Users.first_name.ilike(f"%{filtro_nombre}%")) |
             (Users.last_name.ilike(f"%{filtro_nombre}%"))
->>>>>>> Stashed changes
         )
     if filtro_posicion:
         query = query.filter(Players.primary_position == filtro_posicion)
