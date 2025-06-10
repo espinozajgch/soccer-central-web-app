@@ -1,5 +1,5 @@
 import streamlit as st
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from models import Users, Players
 from db import engine
 from utils import login
@@ -24,7 +24,7 @@ def Edit_Player_Info():
 
     with Session(engine) as session:
         # Obtener todos los jugadores
-        players = session.query(Players).join(Users).order_by(Users.last_name).all()
+        players = session.query(Players).options(joinedload(Players.user)).join(Users).order_by(Users.last_name).all()
         player_options = [f"{p.user.first_name} {p.user.last_name} (ID: {p.player_id})" for p in players]
         selected = st.selectbox("Select Player", player_options)
 
@@ -43,7 +43,7 @@ def Edit_Player_Info():
             number = st.number_input("Jersey Number", value=selected_player.number or 0)
             primary_position = st.text_input("Primary Position", value=selected_player.primary_position or "")
             secondary_position = st.text_input("Secondary Position", value=selected_player.secondary_position or "")
-            dominant_foot = st.selectbox("Dominant Foot", ["Right", "Left", "Both"], index=["Right", "Left", "Both"].index(selected_player.dominant_foot or "Right"))
+            dominant_foot = st.selectbox("Dominant Foot", ["Right", "Left", "Both", "Unknown"], index=["Right", "Left", "Both", "Unknown"].index(selected_player.dominant_foot or "Right"))
             height = st.number_input("Height (cm)", value=float(selected_player.height or 170), step=1.0)
 
             submitted = st.form_submit_button("💾 Save Changes")
