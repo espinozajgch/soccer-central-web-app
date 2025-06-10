@@ -235,6 +235,9 @@ def create_soccer_field_position_image(position):
     player_marker = plt.Circle((x, y), 4, color=PRIMARY_COLOR, ec=SECONDARY_COLOR, lw=2.5, alpha=0.9, zorder=10)
     ax.add_patch(player_marker)
     
+    if not isinstance(position, str) or not position:
+        position = "Unknown"
+
     text_position = position if position in position_coords else "Position Unknown"
     plt.annotate(text_position, (x, y), xytext=(0, -10), textcoords='offset points', 
                 ha='center', va='center', color='white', fontsize=14, fontweight='bold',
@@ -243,7 +246,7 @@ def create_soccer_field_position_image(position):
     if position in ['Striker', 'Forward', 'Center Forward']:
         plt.arrow(x+5, y, -15, 0, head_width=3, head_length=5, fc=ACCENT_COLOR, ec=ACCENT_COLOR, alpha=0.7)
         plt.arrow(x+3, y+7, -10, -5, head_width=3, head_length=5, fc=ACCENT_COLOR, ec=ACCENT_COLOR, alpha=0.7)
-    elif 'Midfielder' in position:
+    elif position and 'Midfielder' in position:
         plt.arrow(x, y+10, 0, -5, head_width=3, head_length=5, fc=ACCENT_COLOR, ec=ACCENT_COLOR, alpha=0.7)
         plt.arrow(x-10, y, 5, 0, head_width=3, head_length=5, fc=ACCENT_COLOR, ec=ACCENT_COLOR, alpha=0.7)
         plt.arrow(x+10, y, -5, 0, head_width=3, head_length=5, fc=ACCENT_COLOR, ec=ACCENT_COLOR, alpha=0.7)
