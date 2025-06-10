@@ -61,6 +61,7 @@ def generarMenu(usuario):
         st.page_link("app.py", label="Inicio", icon=":material/home:")
         st.subheader(":material/dashboard: Dashboard")
         st.page_link("pages/player_report_from_layout.py", label="Reportes", icon=":material/picture_as_pdf:")
+        st.page_link("pages/player_assessments.py", label="Formularios de evaluacion", icon=":material/description:")
 
         st.subheader(":material/manage_accounts: Administrator")
 
