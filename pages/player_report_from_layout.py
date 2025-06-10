@@ -102,24 +102,6 @@ def Setup_page():
     logo = "./assets/images/soccer-central.png"
     st.sidebar.image(logo, width=350)
     
-    with st.sidebar.container():
-        st.sidebar.header("Dashboard Settings")
-        
-        # Theme selection with brand colors
-        theme_options = {
-            "Professional Blue": BRAND_COLORS[2],
-            "Soccer Green": BRAND_COLORS[1], 
-            "Golden Yellow": BRAND_COLORS[0],
-            "Deep Purple": BRAND_COLORS[4]
-        }
-        
-        selected_theme = st.sidebar.selectbox(
-            "Choose Theme Color",
-            options=list(theme_options.keys()),
-            index=0
-        )
-        
-        st.sidebar.info(f"Active Theme: {selected_theme}")
 
 def Show_Player_Info():
     with Session(engine) as session:
