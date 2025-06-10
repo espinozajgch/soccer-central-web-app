@@ -170,12 +170,12 @@ def Show_Player_Info():
                 perf_col1, perf_col2, perf_col3, perf_col4 = st.columns(4)
                 
                 registration_date = getattr(player, "registration_date", None) if player else None
-                height = getattr(player, "height", "Not specified") if player else "Not specified"
+                #height = getattr(player, "height", "Not specified") if player else "Not specified"
                 grade_level = getattr(player, "grade_level", "Not specified") if player else "Not specified"
                 training_location = getattr(player, "training_location", "Not specified") if player else "Not specified"
                 
-                with perf_col1:
-                    st.metric("Height", f"{height} cm" if height != "Not specified" else height)
+                #with perf_col1:
+                    #st.metric("Height", f"{height} cm" if height != "Not specified" else height)
                 
                 with perf_col2:
                     st.metric("Grade Level", grade_level)
