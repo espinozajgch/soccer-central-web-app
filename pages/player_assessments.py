@@ -1,5 +1,5 @@
 import streamlit as st
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from db import SessionLocal
 from utils import login
 from models import PlayerAssessments, Players, Users
@@ -16,7 +16,7 @@ def show_player_assessments_page():
     session: Session = SessionLocal()
 
     # Cargamos todos los jugadores con su usuario relacionado
-    jugadores = session.query(Players).join(Users).filter(Players.user_id == Users.user_id).all()
+    jugadores = session.query(Players).options(joinedload(Players.user)).join(Users).filter(Players.user_id == Users.user_id).all()
 
     # Extraemos valores únicos para los filtros
     posiciones = sorted({p.primary_position for p in jugadores if p.primary_position})
@@ -40,7 +40,7 @@ def show_player_assessments_page():
         aplicar_filtro = st.form_submit_button("Aplicar filtros")
 
     # Construimos la query dinámica
-    query = session.query(Players).join(Users).filter(Players.user_id == Users.user_id)
+    query = session.query(Players).options(joinedload(Players.user)).join(Users).filter(Players.user_id == Users.user_id)
 
 
     if filtro_nombre:
