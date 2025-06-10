@@ -87,7 +87,7 @@ def show_player_assessments_page():
         coach_id = session.query(Users).filter(Users.email == st.session_state.usuario).first().user_id
         category = st.selectbox("Categoría", ["technical", "physical", "mental"])
         item = st.text_input("Ítem evaluado")
-        value = st.text_input("Valor")
+        value = st.slider("Valor", min_value=1, max_value=5, step=1)
         notes = st.text_area("Notas", placeholder="Notas adicionales del coach (opcional)")
         btn = st.button("Guardar evaluación")
 
