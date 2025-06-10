@@ -55,12 +55,12 @@ def generarMenu(usuario):
         nombre= usuario
         
         #Mostramos el nombre del usuario
-        st.write(f"Hello **:blue-background[{nombre}]** ")
+        st.write(f"Hola **:blue-background[{nombre}]** ")
         
         # Mostramos los enlaces de páginas
-        st.page_link("app.py", label="Home", icon=":material/home:")
+        st.page_link("app.py", label="Inicio", icon=":material/home:")
         st.subheader(":material/dashboard: Dashboard")
-        st.page_link("pages/player_report_from_layout.py", label="Reports", icon=":material/picture_as_pdf:")
+        st.page_link("pages/player_report_from_layout.py", label="Reportes", icon=":material/picture_as_pdf:")
 
         st.subheader(":material/manage_accounts: Administrator")
 
@@ -73,7 +73,7 @@ def generarMenu(usuario):
         st.divider()
 
         # Botón para cerrar la sesión
-        btnSalir=st.button("Exit", type="tertiary", icon=":material/logout:")
+        btnSalir=st.button("Salir", type="tertiary", icon=":material/logout:")
         if btnSalir:
             cerrarSesion()
 
@@ -83,6 +83,9 @@ def cerrarSesion():
         del st.session_state['usuario']
     st.query_params.clear()  #Limpia la URL
     st.session_state.clear()
+    st.cache_data.clear()     #Limpia la caché de datos
+    st.cache_resource.clear() #Limpia la caché de recursos
+    st.switch_page("App.py")  #Para evitar rastros de otras páginas al salir.
     st.rerun()
 
 def generarLogin():
