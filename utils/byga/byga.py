@@ -10,6 +10,25 @@ import time
 
 
 # Proceso para obtener los datos de byga con selenium
+# eejcutarlo en terminal local
+# 1. Crear (si no existe) y activar un entorno virtual:
+#    En Windows:
+#        python -m venv venv
+#        venv\Scripts\activate
+#
+#    En macOS/Linux:
+#        python3 -m venv venv
+#        source venv/bin/activate
+
+# 2. Instalar las dependencias listadas en requirements.txt:
+#        pip install -r requirements.txt
+
+# 3. Verificar que se instalaron correctamente:
+#        pip list
+
+# 4. (Opcional) Para guardar nuevas dependencias instaladas:
+#        pip freeze > requirements.txt
+
 
 # Configurar navegador
 options = Options()
