@@ -1,9 +1,12 @@
 import streamlit as st
 import pandas as pd
+import logging
 from auth import get_user
 from db import check_password, hash_password, engine
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from models import Users
+
 
 # Validación simple de usuario y clave con un archivo csv
 
@@ -19,7 +22,14 @@ def validarUsuario(usuario,clave):
     """    
     if 'login_attempts' not in st.session_state:
         st.session_state.login_attempts = 0
-    user_db = get_user(usuario)
+    try:    
+        user_db = get_user(usuario)
+    except SQLAlchemyError as e:
+        logging.error("Error al conectar con la base de datos", exc_info=True)
+        st.error(" Lo sentimos, no se puede realizar el login en estos momentos.")
+        st.error(" Intentelo de nuevo más tarde.")
+        st.stop()  # Detiene la ejecución de la app sin que se caiga
+        
     if user_db is None:
         st.session_state.login_attempts += 1
         return False
