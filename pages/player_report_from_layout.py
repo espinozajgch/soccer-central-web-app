@@ -97,11 +97,6 @@ def create_performance_trend_chart():
 
 def Setup_page():
     login.generarLogin()
-    
-    # Enhanced sidebar with brand styling
-    logo = "./assets/images/soccer-central.png"
-    st.sidebar.image(logo, width=350)
-    
 
 def Show_Player_Info():
     with Session(engine) as session:
