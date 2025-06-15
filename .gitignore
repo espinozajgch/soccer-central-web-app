@@ -178,3 +178,5 @@ cython_debug/
 # Ignorar imágenes
 assets/images/
 venv
+
+.idea/
