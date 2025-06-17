@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from sqlalchemy import DECIMAL, Date, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, String, Text
+from sqlalchemy import DECIMAL, Date, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, String, Text, Enum as SqlEnum
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing import Optional
@@ -297,26 +297,58 @@ class PlayerVideos(Base):
     player: Mapped[Optional['Players']] = relationship('Players', back_populates='player_videos')
     video: Mapped[Optional['Videos']] = relationship('Videos', back_populates='player_videos')
 
+class CoreValue(Base):
+    __tablename__ = 'core_values'
+    __table_args__ = (
+        Index('ix_core_values_id', 'id'),
+        {'comment': 'Valores fundamentales evaluados en los jugadores'}
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, comment='ID único del valor fundamental')
+    name: Mapped[str] = mapped_column(String(255), nullable=False, comment='Nombre del valor fundamental')
+    description: Mapped[Optional[str]] = mapped_column(Text, comment='Descripción del valor fundamental')
+
+    assessments: Mapped[List['PlayerAssessments']] = relationship('PlayerAssessments', back_populates='core_value')
+
+class Programs(Base):
+    __tablename__ = 'programs'
+    __table_args__ = (
+        Index('ix_programs_id', 'id'),
+        {'comment': 'Programas de entrenamiento asociados a las evaluaciones'}
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, comment='ID único del programa')
+    name: Mapped[str] = mapped_column(String(255), nullable=False, comment='Nombre del programa de entrenamiento')
+
+    assessments: Mapped[List['PlayerAssessments']] = relationship('PlayerAssessments', back_populates='program')
 
 class PlayerAssessments(Base):
     __tablename__ = 'player_assessments'
     __table_args__ = (
         ForeignKeyConstraint(['player_id'], ['players.player_id'], name='player_assessments_ibfk_1'),
         ForeignKeyConstraint(['coach_id'], ['users.user_id'], name='player_assessments_ibfk_2'),
+        ForeignKeyConstraint(['core_value_id'], ['core_values.id'], name='player_assessments_ibfk_3'),
+        ForeignKeyConstraint(['program_id'], ['programs.id'], name='player_assessments_ibfk_4'),
         Index('player_id', 'player_id'),
         Index('coach_id', 'coach_id'),
-        {'comment': 'Evaluaciones realizadas a jugadores por parte de entrenadores (coaches) en distintas categorías'}
+        Index('core_value_id', 'core_value_id'),
+        Index('program_id', 'program_id'),
+        {'comment': 'Evaluaciones cualitativas realizadas por los entrenadores a los jugadores'}
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, comment='ID único de la evaluación')
-    player_id: Mapped[Optional[int]] = mapped_column(Integer, comment='Jugador evaluado')
-    coach_id: Mapped[Optional[int]] = mapped_column(Integer, comment='Coach que realiza la evaluación')
-    category: Mapped[Optional[str]] = mapped_column(String(50), comment='Categoría de evaluación: technical, physical, mental')
-    item: Mapped[Optional[str]] = mapped_column(String(100), comment='Nombre del ítem evaluado, como Dribbling, Focus, etc.')
-    value: Mapped[Optional[str]] = mapped_column(String(50), comment='Valor asignado al ítem, puede ser un número o texto')
-    notes: Mapped[Optional[str]] = mapped_column(Text, comment='Notas adicionales del coach')
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow, comment='Fecha de creación del registro')
+    assessment_id: Mapped[int] = mapped_column(Integer, primary_key=True, comment='ID único de la evaluación')
+    player_id: Mapped[int] = mapped_column(Integer, nullable=False, comment='Jugador evaluado')
+    coach_id: Mapped[int] = mapped_column(Integer, nullable=False, comment='Entrenador que realiza la evaluación')
+    category: Mapped[str] = mapped_column(SqlEnum("Técnico", "Físico", "Mental", "Táctico", "Colectivo", "Valores", name="category_enum"), nullable=False)
+    core_value_id: Mapped[Optional[int]] = mapped_column(Integer, comment='Valor fundamental asociado')
+    program_id: Mapped[Optional[int]] = mapped_column(Integer, comment='Programa relacionado con la evaluación')
+    item: Mapped[str] = mapped_column(String(255), nullable=False, comment='Ítem o aspecto evaluado')
+    value: Mapped[int] = mapped_column(Integer, nullable=False, comment='Valor numérico asignado')
+    notes: Mapped[Optional[str]] = mapped_column(Text, comment='Observaciones del entrenador')
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=False, comment='Fecha de creación del registro')
 
-    player: Mapped[Optional['Players']] = relationship('Players', back_populates='player_assessments')
-    coach: Mapped[Optional['Users']] = relationship('Users')
+    core_value: Mapped[Optional['CoreValue']] = relationship('CoreValue', back_populates='assessments')
+    program: Mapped[Optional['Programs']] = relationship('Programs', back_populates='assessments')
+    player: Mapped['Players'] = relationship('Players', back_populates='player_assessments')
+    coach: Mapped['Users'] = relationship('Users', backref='coach_assessments')
 

@@ -72,6 +72,7 @@ def generarMenu(usuario):
         st.subheader(":material/dashboard: Dashboard")
         st.page_link("pages/player_report_from_layout.py", label="Reportes", icon=":material/picture_as_pdf:")
         st.page_link("pages/player_assessments.py", label="Formularios de evaluacion", icon=":material/description:")
+        st.page_link("pages/sc_assessments.py", label="DEMO SC Evaluación", icon=":material/description:")
 
         st.subheader(":material/manage_accounts: Administrator")
 
@@ -133,3 +134,4 @@ def get_logged_in_user():
 
     with Session(engine) as session:
         return session.query(Users).filter(Users.email == st.session_state["usuario"]).first()
+
