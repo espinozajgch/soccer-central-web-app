@@ -5,10 +5,9 @@ import numpy as np
 
 util.setup_page("Soccer Central")
 
-st.header(" :orange[Home]", divider=True)
+st.header(":orange[Home]", divider=True)
 
 a, b, c ,d  = st.columns(4)
-#c, d = st.columns(2)
 
 a.metric("Temperature", "30°F", "-9°F", border=True)
 b.metric("Wind", "4 mph", "2 mph", border=True)
