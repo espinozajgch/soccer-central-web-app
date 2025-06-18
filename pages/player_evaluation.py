@@ -4,12 +4,13 @@ from db import SessionLocal
 from utils import login
 from models import PlayerAssessments, Players, Users
 import datetime
+from utils import util
 
-def Setup_page():
-    login.generarLogin()
+util.setup_page("Player Evaluation")
+
+st.header(":blue[Players] Evaluation", divider=True)
 
 def show_player_assessments_page():
-    st.title("Evaluaciones de Jugadores")
 
     session: Session = SessionLocal()
 
@@ -106,7 +107,6 @@ def show_player_assessments_page():
             st.rerun()
 
 def main():
-    Setup_page()
     show_player_assessments_page()
 
 if __name__ == "__main__":

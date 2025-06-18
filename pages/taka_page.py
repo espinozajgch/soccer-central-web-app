@@ -1,9 +1,10 @@
 import streamlit as st
-from utils import login
 from utils.taka import api_taka, auth_taka
+from utils import util
 
-# Mostrar login general (para mantener visibilidad de menú)
-login.generarLogin()
+util.setup_page("Taka")
+st.header(":blue[Taka] Evaluation", divider=True)
+
 
 # Mostrar login de Taka
 auth_taka.generarLogin()

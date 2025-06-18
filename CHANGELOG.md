@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.1] - 05-05-2025
-
 ### Added
 - Demo menu e inicio de sesión.
+- Reportes y 360 del jugador

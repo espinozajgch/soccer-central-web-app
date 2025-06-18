@@ -2,17 +2,14 @@ import streamlit as st
 from sqlalchemy.orm import Session, joinedload
 from models import Users, Players
 from db import engine
+from utils import util
 from utils import login
 
-# 🔐 Verificación de sesión
-login.generarLogin()
+util.setup_page("Player 360")
 
-if "usuario" not in st.session_state:
-    st.stop()
+st.header(":blue[Players] Admin", divider=True)
 
-st.header("Administrar :orange[Jugadores]", divider=True)
-
-def Edit_Player_Info():
+def edit_player_info():
     current_user = login.get_logged_in_user()
 
     # 🚫 Restringir acceso a admin
@@ -71,7 +68,7 @@ def Edit_Player_Info():
                 session.rollback()
                 st.error(f"An error occurred: {e}")
 def main():
-    Edit_Player_Info()
+    edit_player_info()
 
 if __name__ == "__main__":
     main()

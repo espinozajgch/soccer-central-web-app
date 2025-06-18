@@ -1,28 +1,20 @@
 import streamlit as st
-from utils import login
 import pandas as pd
-import numpy as np
 from sqlalchemy.orm import Session
-from models import Users, Players
+from models import Users
 from db import engine 
 from datetime import datetime
 from utils.pdf_generator import generate_player_report
 import random
-import plotly.express as px
 import plotly.graph_objects as go
-import base64
+from utils import util
 
-# Page configuration 
-st.set_page_config(
-    page_title="Soccer Central - Player Analytics",
-    layout="wide"
-)
+util.setup_page("Player 360")
+
+st.header(":blue[Players] Dashboard", divider=True)
 
 # Rayner colours
 BRAND_COLORS = ['#d4bc64', '#84ccb4', '#5c74b4', '#6c6c84', '#504f8f', '#83c3d4', '#646c84', '#646c7c', '#588898', '#586c9c']
-
-if "usuario" not in st.session_state:
-    st.stop()
 
 def calculate_age(birth_date):
     if not birth_date:
@@ -95,17 +87,11 @@ def create_performance_trend_chart():
     
     return fig
 
-def Setup_page():
-    login.generarLogin()
-
-def Show_Player_Info():
+def show_player_info():
     with Session(engine) as session:
         users = session.query(Users).filter(Users.role_id == 4).order_by(Users.last_name).all()
         user_options = [f"{u.first_name} {u.last_name}" for u in users]
-        
-        # Enhanced header section
-        st.title("Soccer Central Players Dashboard")
-        
+                
         # Player selection with enhanced styling
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
@@ -455,8 +441,7 @@ def Show_Player_Info():
                     st.warning("No player record found for this user.")
 
 def main():
-    Setup_page()
-    Show_Player_Info()
+    show_player_info()
 
 if __name__ == "__main__":
     main()
