@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Code Cleanup](https://trello.com/c/JfXHt5tB/7-limpieza-y-ajustes-de-codigo)
 
 ### Added
-- [Login](https://trello.com/c/TOqsAhot/1-login)
-    - Login and menu
+- [Graphics](https://trello.com/c/PN2xmIyr/10-graficos-en-el-home)
+    - Added Graphics to home section
+- [Player Evaluation](https://trello.com/c/4nMRTyJg/9-a%C3%B1adir-formulario-de-registro-de-jugadores)
 - [Player Reports](https://trello.com/c/LdtXga0f/4-dise%C3%B1ar-layout-visual-para-ficha-de-jugador)
     - Player reports and 360 dashboard
-- [Player Evaluation](https://trello.com/c/4nMRTyJg/9-a%C3%B1adir-formulario-de-registro-de-jugadores)
+- [Login](https://trello.com/c/TOqsAhot/1-login)
+    - Login and menu
