@@ -70,17 +70,19 @@ def generarMenu(usuario):
         # Mostramos los enlaces de páginas
         st.page_link("app.py", label="Inicio", icon=":material/home:")
         st.subheader(":material/dashboard: Dashboard")
-        st.page_link("pages/player_report_from_layout.py", label="Reportes", icon=":material/picture_as_pdf:")
+        st.page_link("pages/player_report_from_layout.py", label="Reports", icon=":material/picture_as_pdf:")
         st.page_link("pages/player_assessments.py", label="Formularios de evaluacion", icon=":material/description:")
         st.page_link("pages/sc_assessments.py", label="DEMO SC Evaluación", icon=":material/description:")
 
         st.subheader(":material/manage_accounts: Administrator")
-
-        st.page_link("pages/achamp_page.py", label="Achamps", icon=":material/bar_chart:")
-        st.page_link("pages/byga_page.py", label="Byga", icon=":material/sports_soccer:")
+    
         st.page_link("pages/taka_page.py", label="Taka", icon=":material/videocam:")
-        
-        st.page_link("pages/player_admin.py", label="Players", icon=":material/account_circle:")
+        # Obtener objeto Users para ver el role_id
+        current_user = get_logged_in_user()
+
+        if current_user and current_user.role_id != 4:
+            st.page_link("pages/user_admin.py", label="User Management", icon=":material/account_circle:")
+
 
         st.divider()
 
