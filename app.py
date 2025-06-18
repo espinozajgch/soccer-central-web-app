@@ -16,13 +16,13 @@ c.metric("Humidity", "77%", "5%", border=True)
 d.metric("Pressure", "30.34 inHg", "-2 inHg", border=True)
 
 st.divider()
+e, f  = st.columns(2)
+chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["a", "b", "c"])
+
+e.area_chart(chart_data)
+
+#st.divider()
 
 chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["a", "b", "c"])
 
-st.area_chart(chart_data)
-
-st.divider()
-
-chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["a", "b", "c"])
-
-st.bar_chart(chart_data)
+f.bar_chart(chart_data)
