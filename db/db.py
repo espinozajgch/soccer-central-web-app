@@ -2,7 +2,7 @@ import streamlit as st
 from passlib.hash import bcrypt as passlib_bcrypt
 from sqlalchemy import func, create_engine
 from sqlalchemy.orm import aliased, sessionmaker, joinedload
-from models import (
+from db.models import (
     Players, Users, PlayerTeams, Teams, PlayerGameStats, Games, Metrics,
     PlayerEvaluations, PlayerVideos, Videos, PlayerDocuments
 )

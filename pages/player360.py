@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 from sqlalchemy.orm import Session
-from models import Users
-from db import engine 
+from db.models import Users
+from db.db import engine 
 from datetime import datetime
 from utils.pdf_generator import generate_player_report
 import random

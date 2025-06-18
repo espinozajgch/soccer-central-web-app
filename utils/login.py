@@ -2,11 +2,10 @@ import streamlit as st
 import pandas as pd
 import logging
 from auth import get_user
-from db import check_password, hash_password, engine
+from db.db import check_password, hash_password, engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from models import Users
-
+from db.models import Users
 
 # Validación simple de usuario y clave con un archivo csv
 
@@ -68,7 +67,7 @@ def generarMenu(usuario):
         st.write(f"Hola **:blue-background[{nombre}]** ")
         
         # Mostramos los enlaces de páginas
-        st.page_link("app.py", label="Inicio", icon=":material/home:")
+        st.page_link("app.py", label="Home", icon=":material/home:")
         st.subheader(":material/dashboard: Dashboard")
         st.page_link("pages/player360.py", label="Player 360", icon=":material/contacts:")
         st.page_link("pages/player_evaluation.py", label="Player Evaluation", icon=":material/description:")
