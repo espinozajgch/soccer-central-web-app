@@ -14,7 +14,7 @@ util.setup_page("Player 360")
 st.header(":blue[Players] Dashboard", divider=True)
 
 # Rayner colours
-BRAND_COLORS = ['#d4bc64', '#84ccb4', '#5c74b4', '#6c6c84', '#504f8f', '#83c3d4', '#646c84', '#646c7c', '#588898', '#586c9c']
+BRAND_COLORS =util.get_brand_colors_list()
 
 def calculate_age(birth_date):
     if not birth_date:

@@ -1,8 +1,8 @@
 import streamlit as st
 from sqlalchemy.orm import Session, joinedload
-from db import SessionLocal
+from db.db import SessionLocal
 from utils import login
-from models import PlayerAssessments, Players, Users
+from db.models import PlayerAssessments, Players, Users
 import datetime
 from utils import util
 

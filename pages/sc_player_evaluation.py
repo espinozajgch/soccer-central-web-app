@@ -1,8 +1,8 @@
 import streamlit as st
 from sqlalchemy import distinct
 from sqlalchemy.orm import joinedload
-from db import SessionLocal
-from models import Players, Users, CoreValue, Programs, PlayerAssessments
+from db.db import SessionLocal
+from db.models import Players, Users, CoreValue, Programs, PlayerAssessments
 from datetime import date, datetime
 from utils import util
 
@@ -10,7 +10,8 @@ util.setup_page("Player Evaluation")
 
 st.header(":blue[Players] Evaluation", divider=True)
 
-BRAND_COLORS = ['#d4bc64', '#84ccb4', '#5c74b4', '#6c6c84', '#504f8f', '#83c3d4', '#646c84', '#646c7c', '#588898', '#586c9c']
+# Rayner colours
+BRAND_COLORS =util.get_brand_colors_list()
 
 def color_html(text: str, color: str, bold: bool = True):
     weight = 'bold' if bold else 'normal'
