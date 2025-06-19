@@ -1,8 +1,6 @@
 import streamlit as st
-from utils import login
-login.generarLogin()
+from utils import util
 
-if "usuario" not in st.session_state:
-    st.stop()
-    
-st.header('Byga')
+util.setup_page("Player Evaluation")
+
+st.header(":blue[Byga] Evaluation", divider=True)

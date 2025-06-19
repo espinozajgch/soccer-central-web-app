@@ -1,5 +1,5 @@
-from db import SessionLocal
-from models import Users
+from db.db import SessionLocal
+from db.models import Users
 
 def get_user(username):
     session = SessionLocal()

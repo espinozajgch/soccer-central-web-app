@@ -2,11 +2,10 @@ import streamlit as st
 import pandas as pd
 import logging
 from auth import get_user
-from db import check_password, hash_password, engine
+from db.db import check_password, hash_password, engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from models import Users
-
+from db.models import Users
 
 # Validación simple de usuario y clave con un archivo csv
 
@@ -56,7 +55,7 @@ def generarMenu(usuario):
         st.logo("assets/images/soccer-central.png", size="large")
 
         # Cargamos la tabla de usuarios
-        dfusuarios = pd.read_csv('usuarios.csv')
+        #dfusuarios = pd.read_csv('usuarios.csv')
 
         # Filtramos la tabla de usuarios
         #dfUsuario =dfusuarios[(dfusuarios['usuario']==usuario)]
@@ -68,11 +67,11 @@ def generarMenu(usuario):
         st.write(f"Hola **:blue-background[{nombre}]** ")
         
         # Mostramos los enlaces de páginas
-        st.page_link("app.py", label="Inicio", icon=":material/home:")
+        st.page_link("app.py", label="Home", icon=":material/home:")
         st.subheader(":material/dashboard: Dashboard")
-        st.page_link("pages/player_report_from_layout.py", label="Reports", icon=":material/picture_as_pdf:")
-        st.page_link("pages/player_assessments.py", label="Formularios de evaluacion", icon=":material/description:")
-        st.page_link("pages/sc_assessments.py", label="DEMO SC Evaluación", icon=":material/description:")
+        st.page_link("pages/player360.py", label="Player 360", icon=":material/contacts:")
+        st.page_link("pages/player_evaluation.py", label="Player Evaluation", icon=":material/description:")
+        st.page_link("pages/sc_player_evaluation.py", label="DEMO Player Evaluation", icon=":material/description:")
 
         st.subheader(":material/manage_accounts: Administrator")
     
@@ -103,7 +102,8 @@ def cerrarSesion():
     st.rerun()
 
 def generarLogin():
-    # 🔄 Restaurar sesión desde la URL si existe
+
+    #Restaurar sesión desde la URL si existe
     usuario_actual = st.query_params.get("user")
     if usuario_actual and "usuario" not in st.session_state:
         st.session_state['usuario'] = usuario_actual['username']

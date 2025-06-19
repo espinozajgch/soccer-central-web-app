@@ -1,8 +1,7 @@
 import streamlit as st
-from utils import login
-login.generarLogin()
+from utils import util
 
-if "usuario" not in st.session_state:
-    st.stop()
+util.setup_page("Player Evaluation")
 
-st.header('A-Champ')
+st.header(":blue[A-Champ] Evaluation", divider=True)
+
