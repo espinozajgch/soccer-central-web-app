@@ -14,3 +14,4 @@ numpy
 requests==2.31.0
 mysql-connector-python==8.3.0
 selenium
+pyjwt

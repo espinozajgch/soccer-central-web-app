@@ -1,72 +1,55 @@
 import streamlit as st
-import pandas as pd
 import logging
+import jwt
+import datetime
 from auth import get_user
 from db.db import check_password, hash_password, engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from db.models import Users
 
-# Validación simple de usuario y clave con un archivo csv
+# --- CONFIG JWT ---
+JWT_SECRET = st.secrets.auth.jwt_secret
+JWT_ALGORITHM = "HS256"
+JWT_EXP_DELTA_SECONDS = 3600 * 24 * 1  # 1 días par amatenr la sesion
 
-def validarUsuario(usuario,clave):    
-    """Permite la validación de usuario y clave
-
-    Args:
-        usuario (str): usuario a validar
-        clave (str): clave del usuario
-
-    Returns:
-        bool: True usuario valido, False usuario invalido
-    """    
+# Validación simple de usuario y clave
+def validarUsuario(usuario, clave):
     if 'login_attempts' not in st.session_state:
         st.session_state.login_attempts = 0
-    try:    
+    try:
         user_db = get_user(usuario)
     except SQLAlchemyError as e:
         logging.error("Error al conectar con la base de datos", exc_info=True)
-        st.error(" Lo sentimos, no se puede realizar el login en estos momentos.")
-        st.error(" Intentelo de nuevo más tarde.")
-        st.stop()  # Detiene la ejecución de la app sin que se caiga
+        st.error(" No se puede realizar el login en estos momentos.")
+        st.stop()
         
     if user_db is None:
         st.session_state.login_attempts += 1
         return False
+
     stored_pass = user_db.password_hash
+
     if st.session_state.login_attempts > 5:
         st.error("Demasiados intentos. Intenta más tarde.")
         return False
     else:
-        print("Password:" + str(hash_password(clave)))
         if stored_pass and check_password(clave, stored_pass):
             st.session_state.usuario = user_db
+            # Guardar token JWT en sesión
+            token = generar_jwt(usuario)
+            st.session_state.jwt_token = token
             return True
         else:
             st.session_state.login_attempts += 1
             return False
 
 def generarMenu(usuario):
-    """Genera el menú dependiendo del usuario
-
-    Args:
-        usuario (str): usuario utilizado para generar el menú
-    """        
     with st.sidebar:
         st.logo("assets/images/soccer-central.png", size="large")
+        nombre = usuario
+        st.write(f"Hello **:blue-background[{nombre}]** ")
 
-        # Cargamos la tabla de usuarios
-        #dfusuarios = pd.read_csv('usuarios.csv')
-
-        # Filtramos la tabla de usuarios
-        #dfUsuario =dfusuarios[(dfusuarios['usuario']==usuario)]
-        
-        # Cargamos el nombre del usuario
-        nombre= usuario
-        
-        #Mostramos el nombre del usuario
-        st.write(f"Hola **:blue-background[{nombre}]** ")
-        
-        # Mostramos los enlaces de páginas
         st.page_link("app.py", label="Home", icon=":material/home:")
         st.subheader(":material/dashboard: Dashboard")
         st.page_link("pages/player360.py", label="Player 360", icon=":material/contacts:")
@@ -76,37 +59,51 @@ def generarMenu(usuario):
         st.subheader(":material/manage_accounts: Administrator")
     
         st.page_link("pages/taka_page.py", label="Taka", icon=":material/videocam:")
-        # Obtener objeto Users para ver el role_id
         current_user = get_logged_in_user()
-
         if current_user and current_user.role_id != 4:
             st.page_link("pages/user_admin.py", label="User Management", icon=":material/account_circle:")
 
-
         st.divider()
 
-        # Botón para cerrar la sesión
-        btnSalir=st.button("Salir", type="tertiary", icon=":material/logout:")
+        btnSalir = st.button("Salir", type="tertiary", icon=":material/logout:")
         if btnSalir:
             cerrarSesion()
 
-#Función para cerrar sesión y limpiar query_params
+#Cerrar sesión
 def cerrarSesion():
     if 'usuario' in st.session_state:
         del st.session_state['usuario']
-    st.query_params.clear()  #Limpia la URL
+    if 'jwt_token' in st.session_state:
+        del st.session_state['jwt_token']
+    st.query_params.clear()
     st.session_state.clear()
-    st.cache_data.clear()     #Limpia la caché de datos
-    st.cache_resource.clear() #Limpia la caché de recursos
-    st.switch_page("App.py")  #Para evitar rastros de otras páginas al salir.
+    st.cache_data.clear()
+    st.cache_resource.clear()
+    st.switch_page("App.py")
     st.rerun()
 
 def generarLogin():
+    # Si ya hay token, decodificarlo
+    if 'jwt_token' in st.session_state:
+        try:
+            payload = jwt.decode(
+                st.session_state.jwt_token,
+                JWT_SECRET,
+                algorithms=[JWT_ALGORITHM]
+            )
+            email = payload.get("email")
+            if email and "usuario" not in st.session_state:
+                st.session_state["usuario"] = email
+        except jwt.ExpiredSignatureError:
+            st.warning("Sesión expirada, vuelve a iniciar sesión.")
+            del st.session_state["jwt_token"]
+            if 'usuario' in st.session_state:
+                del st.session_state["usuario"]
 
-    #Restaurar sesión desde la URL si existe
+    # Restaurar desde URL
     usuario_actual = st.query_params.get("user")
     if usuario_actual and "usuario" not in st.session_state:
-        st.session_state['usuario'] = usuario_actual['username']
+        st.session_state['usuario'] = usuario_actual[0]
 
     if 'usuario' in st.session_state:
         st.query_params.update({"user": [st.session_state["usuario"]]})
@@ -125,10 +122,18 @@ def generarLogin():
                 if btnLogin:
                     if validarUsuario(parUsuario, parPassword):
                         st.session_state['usuario'] = parUsuario
-                        st.query_params.update({'user': [parUsuario]})  # persistencia en URL
+                        st.query_params.update({'user': [parUsuario]})
                         st.rerun()
                     else:
                         st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
+
+def generar_jwt(usuario):
+    payload = {
+        "email": usuario,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_EXP_DELTA_SECONDS)
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return token
 
 def get_logged_in_user():
     if "usuario" not in st.session_state:
@@ -136,4 +141,3 @@ def get_logged_in_user():
 
     with Session(engine) as session:
         return session.query(Users).filter(Users.email == st.session_state["usuario"]).first()
-

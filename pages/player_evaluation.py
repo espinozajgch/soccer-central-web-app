@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from db.db import SessionLocal
 from utils import login
 from db.models import PlayerAssessments, Players, Users
+from db.db import get_db_session
 import datetime
 from utils import util
 
@@ -12,7 +13,7 @@ st.header(":blue[Players] Evaluation", divider=True)
 
 def show_player_assessments_page():
 
-    session: Session = SessionLocal()
+  with get_db_session() as session:
 
     # Cargamos todos los jugadores con su usuario relacionado
     jugadores = session.query(Players).options(joinedload(Players.user)).join(Users).filter(Players.user_id == Users.user_id).all()

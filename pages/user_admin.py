@@ -1,10 +1,10 @@
 import streamlit as st
 from sqlalchemy.orm import Session, joinedload
-from models import Users, Players, Roles
-from db import engine
+from db.models import Users, Players, Roles
+from db.db import engine
+from db.db import hash_password, check_password
 from utils import login
 from datetime import date
-import bcrypt
 
 # Session check
 login.generarLogin()
@@ -19,9 +19,6 @@ if not current_user or current_user.role_id != 1:
 
 st.header("User Management", divider=True)
 
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-
 tabs = st.tabs(["Add User", "Edit User", "Edit Player Profile"])
 
 # ===== TAB 1: ADD USER =====
@@ -32,7 +29,7 @@ with tabs[0]:
 
         # Role Selection OUTSIDE the form
         st.subheader("Role Selection")
-        selected_role_name = st.selectbox("Role", role_names, index=role_names.index("Player"))
+        selected_role_name = st.selectbox("Role", role_names, index=role_names.index("Admin"))
         role_id = next(r.role_id for r in roles if r.role_name == selected_role_name)
 
         # Form starts here
@@ -89,8 +86,8 @@ with tabs[0]:
             submitted = st.form_submit_button("Create User")
 
             if submitted:
-                if not email or not password or not confirm_password:
-                    st.error("All fields are required.")
+                if not first_name or not last_name or not email or not password or not confirm_password:
+                    st.error("You should fill name, email and password fields")
                 elif len(password) < 8:
                     st.error("Password must be at least 8 characters.")
                 elif password != confirm_password:
@@ -154,6 +151,7 @@ with tabs[0]:
 
                         session.commit()
                         st.success("User created successfully.")
+                        st.rerun()
                     except Exception as e:
                         session.rollback()
                         st.error(f"Error: {e}")
