@@ -11,6 +11,9 @@ from utils import util
 
 util.setup_page("Player 360")
 
+# LOGIN + MENU
+util.login_if_needed()
+
 st.header(":blue[Players] Dashboard", divider=True)
 
 # Rayner colours

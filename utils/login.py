@@ -1,133 +1,71 @@
+# utils/login.py
+
 import streamlit as st
-import pandas as pd
 import logging
+import jwt
+import datetime
 from auth import get_user
-from db.db import check_password, hash_password, engine
+from db.db import check_password, engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from db.models import Users
+from streamlit_cookies_manager import EncryptedCookieManager
 
-# Validación simple de usuario y clave con un archivo csv
+# --- CONFIG JWT ---
+JWT_SECRET = st.secrets.auth.jwt_secret
+JWT_ALGORITHM = st.secrets.auth.algorithm
+JWT_EXP_DELTA_SECONDS = st.secrets.auth.time 
 
-def validarUsuario(usuario,clave):    
-    """Permite la validación de usuario y clave
+# --- CONFIG COOKIES ---
+cookies = EncryptedCookieManager(
+    prefix="sc_",
+    password=JWT_SECRET
+)
 
-    Args:
-        usuario (str): usuario a validar
-        clave (str): clave del usuario
+if not cookies.ready():
+    st.stop()
 
-    Returns:
-        bool: True usuario valido, False usuario invalido
-    """    
+# --- VALIDACIÓN DE USUARIO ---
+def validarUsuario(usuario, clave):
     if 'login_attempts' not in st.session_state:
         st.session_state.login_attempts = 0
-    try:    
+
+    try:
         user_db = get_user(usuario)
-    except SQLAlchemyError as e:
-        logging.error("Error al conectar con la base de datos", exc_info=True)
-        st.error(" Lo sentimos, no se puede realizar el login en estos momentos.")
-        st.error(" Intentelo de nuevo más tarde.")
-        st.stop()  # Detiene la ejecución de la app sin que se caiga
-        
+    except SQLAlchemyError:
+        logging.error("Error DB", exc_info=True)
+        st.error("Unable to login.")
+        st.stop()
+
     if user_db is None:
         st.session_state.login_attempts += 1
         return False
-    stored_pass = user_db.password_hash
+
     if st.session_state.login_attempts > 5:
-        st.error("Demasiados intentos. Intenta más tarde.")
+        st.error("Too many attempts. Try again later")
         return False
+
+    if check_password(clave, user_db.password_hash):
+        st.session_state.usuario = user_db
+        token = generar_jwt(usuario)
+        st.session_state.jwt_token = token
+        cookies["jwt_token"] = token
+        cookies.save()
+        return True
     else:
-        print("Password:" + str(hash_password(clave)))
-        if stored_pass and check_password(clave, stored_pass):
-            st.session_state.usuario = user_db
-            return True
-        else:
-            st.session_state.login_attempts += 1
-            return False
+        st.session_state.login_attempts += 1
+        return False
 
-def generarMenu(usuario):
-    """Genera el menú dependiendo del usuario
+# --- JWT ---
+def generar_jwt(usuario):
+    payload = {
+        "email": usuario,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_EXP_DELTA_SECONDS)
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return token
 
-    Args:
-        usuario (str): usuario utilizado para generar el menú
-    """        
-    with st.sidebar:
-        st.logo("assets/images/soccer-central.png", size="large")
-
-        # Cargamos la tabla de usuarios
-        #dfusuarios = pd.read_csv('usuarios.csv')
-
-        # Filtramos la tabla de usuarios
-        #dfUsuario =dfusuarios[(dfusuarios['usuario']==usuario)]
-        
-        # Cargamos el nombre del usuario
-        nombre= usuario
-        
-        #Mostramos el nombre del usuario
-        st.write(f"Hola **:blue-background[{nombre}]** ")
-        
-        # Mostramos los enlaces de páginas
-        st.page_link("app.py", label="Home", icon=":material/home:")
-        st.subheader(":material/dashboard: Dashboard")
-        st.page_link("pages/player360.py", label="Player 360", icon=":material/contacts:")
-        st.page_link("pages/player_evaluation.py", label="Player Evaluation", icon=":material/description:")
-        st.page_link("pages/sc_player_evaluation.py", label="DEMO Player Evaluation", icon=":material/description:")
-
-        st.subheader(":material/manage_accounts: Administrator")
-
-        st.page_link("pages/achamp_page.py", label="Achamps", icon=":material/bar_chart:")
-        st.page_link("pages/byga_page.py", label="Byga", icon=":material/sports_soccer:")
-        st.page_link("pages/taka_page.py", label="Taka", icon=":material/videocam:")
-        
-        st.page_link("pages/player_admin.py", label="Players", icon=":material/account_circle:")
-
-        st.divider()
-
-        # Botón para cerrar la sesión
-        btnSalir=st.button("Salir", type="tertiary", icon=":material/logout:")
-        if btnSalir:
-            cerrarSesion()
-
-#Función para cerrar sesión y limpiar query_params
-def cerrarSesion():
-    if 'usuario' in st.session_state:
-        del st.session_state['usuario']
-    st.query_params.clear()  #Limpia la URL
-    st.session_state.clear()
-    st.cache_data.clear()     #Limpia la caché de datos
-    st.cache_resource.clear() #Limpia la caché de recursos
-    st.switch_page("App.py")  #Para evitar rastros de otras páginas al salir.
-    st.rerun()
-
-def generarLogin():
-
-    #Restaurar sesión desde la URL si existe
-    usuario_actual = st.query_params.get("user")
-    if usuario_actual and "usuario" not in st.session_state:
-        st.session_state['usuario'] = usuario_actual['username']
-
-    if 'usuario' in st.session_state:
-        st.query_params.update({"user": [st.session_state["usuario"]]})
-        generarMenu(st.session_state['usuario'])
-    else:
-        st.logo("assets/images/soccer-central.png", size="large")
-
-        col1, col2, col3 = st.columns([2, 2, 2])
-        
-        with col2:
-            with st.form('frmLogin'):
-                parUsuario = st.text_input('Usuario')
-                parPassword = st.text_input('Password', type='password')
-                btnLogin = st.form_submit_button('Ingresar', type='primary')
-
-                if btnLogin:
-                    if validarUsuario(parUsuario, parPassword):
-                        st.session_state['usuario'] = parUsuario
-                        st.query_params.update({'user': [parUsuario]})  # persistencia en URL
-                        st.rerun()
-                    else:
-                        st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
-
+# --- GET USUARIO LOGUEADO ---
 def get_logged_in_user():
     if "usuario" not in st.session_state:
         return None
@@ -135,3 +73,106 @@ def get_logged_in_user():
     with Session(engine) as session:
         return session.query(Users).filter(Users.email == st.session_state["usuario"]).first()
 
+# --- MENU ---
+def generarMenu(usuario):
+    with st.sidebar:
+        st.logo("assets/images/soccer-central.png", size="large")
+        st.write(f"Hello **:blue-background[{usuario}]** ")
+
+        st.page_link("app.py", label="Home", icon=":material/home:")
+        st.subheader(":material/dashboard: Dashboard")
+        st.page_link("pages/player360.py", label="Player 360", icon=":material/contacts:")
+        st.page_link("pages/player_evaluation.py", label="Player Evaluation", icon=":material/description:")
+        st.page_link("pages/sc_player_evaluation.py", label="DEMO Player Evaluation", icon=":material/description:")
+
+        st.subheader(":material/manage_accounts: Administrator")
+    
+        current_user = get_logged_in_user()
+        if current_user and current_user.role_id != 4:
+            st.page_link("pages/user_admin.py", label="User Management", icon=":material/account_circle:")
+
+        st.divider()
+
+        btnSalir = st.button("Log out", type="tertiary", icon=":material/logout:")
+        if btnSalir:
+            cerrarSesion()
+
+# --- CERRAR SESION ---
+def cerrarSesion():
+    if 'usuario' in st.session_state:
+        del st.session_state['usuario']
+    if 'jwt_token' in st.session_state:
+        del st.session_state['jwt_token']
+    if "jwt_token" in cookies:
+        del cookies["jwt_token"]
+        cookies.save()
+
+    st.query_params.clear()
+
+    # Flag para forzar mostrar login limpio
+    st.session_state["force_logout"] = True
+
+    st.rerun()
+
+# --- FORMULARIO LOGIN ---
+def mostrar_login_form():
+    st.logo("assets/images/soccer-central.png", size="large")
+    col1, col2, col3 = st.columns([2, 2, 2])
+    
+    with col2:
+        with st.form('frmLogin'):
+            parUsuario = st.text_input('User (email)')
+            parPassword = st.text_input('Password', type='password')
+            btnLogin = st.form_submit_button('Sign in', type='primary')
+
+            if btnLogin:
+                if validarUsuario(parUsuario, parPassword):
+                    st.session_state['usuario'] = parUsuario
+                    st.query_params.update({'user': [parUsuario]})
+                    st.session_state.pop("force_logout", None)  # limpiar flag si loguea bien
+                    st.rerun()
+                else:
+                    st.error("User or Password invalid", icon=":material/gpp_maybe:")
+
+# --- GENERAR LOGIN ---
+def generarLogin():
+    # Si venimos de un logout
+    if st.session_state.get("force_logout", False):
+        mostrar_login_form()
+        return
+
+    # Intentar recuperar JWT desde cookie
+    if "jwt_token" not in st.session_state and "jwt_token" in cookies:
+        st.session_state.jwt_token = cookies["jwt_token"]
+
+    # Validar token JWT
+    if "jwt_token" in st.session_state:
+        try:
+            payload = jwt.decode(
+                st.session_state.jwt_token,
+                JWT_SECRET,
+                algorithms=[JWT_ALGORITHM]
+            )
+            email = payload.get("email")
+            if email and "usuario" not in st.session_state:
+                st.session_state["usuario"] = email
+        except jwt.ExpiredSignatureError:
+            st.warning("Session expired, please log in again.")
+            del st.session_state["jwt_token"]
+            if "jwt_token" in cookies:
+                del cookies["jwt_token"]
+                cookies.save()
+            if 'usuario' in st.session_state:
+                del st.session_state["usuario"]
+
+    # Validar URL query param
+    usuario_actual = st.query_params.get("user")
+    if usuario_actual and "usuario" not in st.session_state:
+        st.session_state['usuario'] = usuario_actual[0]
+
+    # Mostrar menú o login
+    if 'usuario' in st.session_state:
+        st.query_params.update({"user": [st.session_state["usuario"]]})
+        generarMenu(st.session_state['usuario'])
+    else:
+        mostrar_login_form()

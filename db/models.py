@@ -74,7 +74,7 @@ class Users(Base):
         Index('role_id', 'role_id')
     )
 
-    user_id: Mapped[int] = mapped_column(Integer, primary_key=True, comment='ID único del usuario del sistema')
+    user_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, comment='ID único del usuario del sistema')
     role_id: Mapped[Optional[int]] = mapped_column(Integer, comment='Rol del usuario en el sistema')
     first_name: Mapped[Optional[str]] = mapped_column(String(255), comment='Nombre')
     last_name: Mapped[Optional[str]] = mapped_column(String(255), comment='Apellido')

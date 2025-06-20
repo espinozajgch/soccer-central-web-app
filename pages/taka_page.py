@@ -3,6 +3,11 @@ from utils.taka import api_taka, auth_taka
 from utils import util
 
 util.setup_page("Taka")
+
+# LOGIN + MENU
+util.login_if_needed()
+
+
 st.header(":blue[Taka] Evaluation", divider=True)
 
 

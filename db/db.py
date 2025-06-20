@@ -6,6 +6,7 @@ from db.models import (
     Players, Users, PlayerTeams, Teams, PlayerGameStats, Games, Metrics,
     PlayerEvaluations, PlayerVideos, Videos, PlayerDocuments
 )
+from contextlib import contextmanager
 
 DATABASE_URL = f"mysql+mysqlconnector://" + \
     f"{st.secrets.db.username}" + ":" + \
@@ -26,3 +27,12 @@ def hash_password(password: str) -> str:
 def check_password(password: str, hashed: str) -> bool:
     # passlib automatically handles salt & algorithm from the stored hash
     return passlib_bcrypt.verify(password + PEPPER, hashed)
+
+@contextmanager
+def get_db_session():
+    """Genera una sesión de BBDD de vida corta (per request)."""
+    session = SessionLocal()
+    try:
+        yield session   # Entrega la sesión
+    finally:
+        session.close()  # Cierra la sesión (evita problemas de conexión)
