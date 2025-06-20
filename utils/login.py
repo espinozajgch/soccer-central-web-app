@@ -27,8 +27,6 @@ if not cookies.ready():
 
 # --- VALIDACIÓN DE USUARIO ---
 def validarUsuario(usuario, clave):
-    global cookies
-
     if 'login_attempts' not in st.session_state:
         st.session_state.login_attempts = 0
 
@@ -36,7 +34,7 @@ def validarUsuario(usuario, clave):
         user_db = get_user(usuario)
     except SQLAlchemyError:
         logging.error("Error DB", exc_info=True)
-        st.error("No se puede realizar el login.")
+        st.error("Unable to login.")
         st.stop()
 
     if user_db is None:
@@ -44,7 +42,7 @@ def validarUsuario(usuario, clave):
         return False
 
     if st.session_state.login_attempts > 5:
-        st.error("Demasiados intentos. Intenta más tarde.")
+        st.error("Too many attempts. Try again later")
         return False
 
     if check_password(clave, user_db.password_hash):
@@ -77,7 +75,6 @@ def get_logged_in_user():
 
 # --- MENU ---
 def generarMenu(usuario):
-    global cookies
     with st.sidebar:
         st.logo("assets/images/soccer-central.png", size="large")
         st.write(f"Hello **:blue-background[{usuario}]** ")
@@ -102,7 +99,6 @@ def generarMenu(usuario):
 
 # --- CERRAR SESION ---
 def cerrarSesion():
-    global cookies
     if 'usuario' in st.session_state:
         del st.session_state['usuario']
     if 'jwt_token' in st.session_state:
@@ -113,7 +109,7 @@ def cerrarSesion():
 
     st.query_params.clear()
 
-    # Flag para mostrar el login
+    # Flag para forzar mostrar login limpio
     st.session_state["force_logout"] = True
 
     st.rerun()
@@ -133,17 +129,15 @@ def mostrar_login_form():
                 if validarUsuario(parUsuario, parPassword):
                     st.session_state['usuario'] = parUsuario
                     st.query_params.update({'user': [parUsuario]})
+                    st.session_state.pop("force_logout", None)  # limpiar flag si loguea bien
                     st.rerun()
                 else:
-                    st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
+                    st.error("User or Password invalid", icon=":material/gpp_maybe:")
 
 # --- GENERAR LOGIN ---
 def generarLogin():
-    global cookies
-
     # Si venimos de un logout
     if st.session_state.get("force_logout", False):
-        st.session_state.pop("force_logout")
         mostrar_login_form()
         return
 
@@ -163,7 +157,7 @@ def generarLogin():
             if email and "usuario" not in st.session_state:
                 st.session_state["usuario"] = email
         except jwt.ExpiredSignatureError:
-            st.warning("Sesión expirada, vuelve a iniciar sesión.")
+            st.warning("Session expired, please log in again.")
             del st.session_state["jwt_token"]
             if "jwt_token" in cookies:
                 del cookies["jwt_token"]
