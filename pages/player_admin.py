@@ -7,6 +7,9 @@ from utils import login
 
 util.setup_page("Player 360")
 
+# LOGIN + MENU
+util.iniciar_sesion_si_necesario()
+
 st.header(":blue[Players] Admin", divider=True)
 
 def edit_player_info():

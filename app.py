@@ -1,9 +1,20 @@
 import streamlit as st
-from utils import util
+from utils.util import setup_page, iniciar_sesion_si_necesario
 import pandas as pd
 import numpy as np
 
-util.setup_page("Soccer Central")
+
+# PRIMERO: set_page_config
+setup_page("Soccer Central")
+
+# SEGUNDO: login
+iniciar_sesion_si_necesario()
+
+# Primero configuramos los componentes de la pagina y luego llamamos a login configurando las cookie
+# Carga con la cookie
+# Llama a generarLogin()
+# Streamlit ya inicializa el frontend
+# Solo se llama set_page() la primera vez porque sino set_page() se volveria  ejecutar y falla
 
 st.header(":orange[Home]", divider=True)
 
