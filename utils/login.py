@@ -14,21 +14,20 @@ from streamlit_cookies_manager import EncryptedCookieManager
 # --- CONFIG JWT ---
 JWT_SECRET = st.secrets.auth.jwt_secret
 JWT_ALGORITHM = st.secrets.auth.algorithm
-JWT_EXP_DELTA_SECONDS = 3600 * 24 * 1  # 1 día
+JWT_EXP_DELTA_SECONDS = st.secrets.auth.time 
 
-# --- FUNCION PARA CREAR COOKIES ---
-def get_cookies():
-    cookies = EncryptedCookieManager(
-        prefix="sc_",
-        password=JWT_SECRET
-    )
-    if not cookies.ready():
-        st.stop()
-    return cookies
+# --- CONFIG COOKIES ---
+cookies = EncryptedCookieManager(
+    prefix="sc_",
+    password=JWT_SECRET
+)
+
+if not cookies.ready():
+    st.stop()
 
 # --- VALIDACIÓN DE USUARIO ---
 def validarUsuario(usuario, clave):
-    cookies = get_cookies()
+    global cookies
 
     if 'login_attempts' not in st.session_state:
         st.session_state.login_attempts = 0
@@ -78,6 +77,7 @@ def get_logged_in_user():
 
 # --- MENU ---
 def generarMenu(usuario):
+    global cookies
     with st.sidebar:
         st.logo("assets/images/soccer-central.png", size="large")
         st.write(f"Hello **:blue-background[{usuario}]** ")
@@ -102,8 +102,7 @@ def generarMenu(usuario):
 
 # --- CERRAR SESION ---
 def cerrarSesion():
-    cookies = get_cookies()
-
+    global cookies
     if 'usuario' in st.session_state:
         del st.session_state['usuario']
     if 'jwt_token' in st.session_state:
@@ -113,21 +112,46 @@ def cerrarSesion():
         cookies.save()
 
     st.query_params.clear()
-    st.session_state.clear()
-    st.cache_data.clear()
-    st.cache_resource.clear()
-    st.switch_page("App.py")
+
+    # Flag para mostrar el login
+    st.session_state["force_logout"] = True
+
     st.rerun()
+
+# --- FORMULARIO LOGIN ---
+def mostrar_login_form():
+    st.logo("assets/images/soccer-central.png", size="large")
+    col1, col2, col3 = st.columns([2, 2, 2])
+    
+    with col2:
+        with st.form('frmLogin'):
+            parUsuario = st.text_input('User (email)')
+            parPassword = st.text_input('Password', type='password')
+            btnLogin = st.form_submit_button('Sign in', type='primary')
+
+            if btnLogin:
+                if validarUsuario(parUsuario, parPassword):
+                    st.session_state['usuario'] = parUsuario
+                    st.query_params.update({'user': [parUsuario]})
+                    st.rerun()
+                else:
+                    st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
 
 # --- GENERAR LOGIN ---
 def generarLogin():
-    cookies = get_cookies()
+    global cookies
 
-    # 1️⃣ Intentar recuperar JWT desde cookie
+    # Si venimos de un logout
+    if st.session_state.get("force_logout", False):
+        st.session_state.pop("force_logout")
+        mostrar_login_form()
+        return
+
+    # Intentar recuperar JWT desde cookie
     if "jwt_token" not in st.session_state and "jwt_token" in cookies:
         st.session_state.jwt_token = cookies["jwt_token"]
 
-    # 2️⃣ Validar token JWT
+    # Validar token JWT
     if "jwt_token" in st.session_state:
         try:
             payload = jwt.decode(
@@ -147,29 +171,14 @@ def generarLogin():
             if 'usuario' in st.session_state:
                 del st.session_state["usuario"]
 
-    # 3️⃣ Validar URL query param
+    # Validar URL query param
     usuario_actual = st.query_params.get("user")
     if usuario_actual and "usuario" not in st.session_state:
         st.session_state['usuario'] = usuario_actual[0]
 
-    # 4️⃣ Mostrar menú o login
+    # Mostrar menú o login
     if 'usuario' in st.session_state:
         st.query_params.update({"user": [st.session_state["usuario"]]})
         generarMenu(st.session_state['usuario'])
     else:
-        st.logo("assets/images/soccer-central.png", size="large")
-        col1, col2, col3 = st.columns([2, 2, 2])
-        
-        with col2:
-            with st.form('frmLogin'):
-                parUsuario = st.text_input('Usuario')
-                parPassword = st.text_input('Password', type='password')
-                btnLogin = st.form_submit_button('Ingresar', type='primary')
-
-                if btnLogin:
-                    if validarUsuario(parUsuario, parPassword):
-                        st.session_state['usuario'] = parUsuario
-                        st.query_params.update({'user': [parUsuario]})
-                        st.rerun()
-                    else:
-                        st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
+        mostrar_login_form()

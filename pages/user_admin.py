@@ -96,6 +96,16 @@ with tabs[0]:
                     st.error("A user with this email already exists.")
                 else:
                     try:
+                        # GENERAR HASH
+                        password_hashed = hash_password(password)
+
+                        # LOG en consola:
+                        print("========== CREATE USER ==========")
+                        print(f"[INFO] Creating user: {email}")
+                        print(f"[INFO] Password entered: {password}")
+                        print(f"[INFO] Password hash: {password_hashed}")
+                        print("=================================")        
+
                         new_user = Users(
                             first_name=first_name,
                             last_name=last_name,
