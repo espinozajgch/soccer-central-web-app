@@ -5,7 +5,7 @@ from utils import util
 util.setup_page("Taka")
 
 # LOGIN + MENU
-util.iniciar_sesion_si_necesario()
+util.login_if_needed()
 
 
 st.header(":blue[Taka] Evaluation", divider=True)

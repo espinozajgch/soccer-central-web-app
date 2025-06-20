@@ -4,6 +4,6 @@ from utils.util import util
 util.setup_page("Player Evaluation")
 
 # LOGIN + MENU
-util.iniciar_sesion_si_necesario()
+util.login_if_needed()
 
 st.header(":blue[Byga] Evaluation", divider=True)

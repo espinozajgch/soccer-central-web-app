@@ -8,7 +8,7 @@ from utils import login
 util.setup_page("Player 360")
 
 # LOGIN + MENU
-util.iniciar_sesion_si_necesario()
+util.login_if_needed()
 
 st.header(":blue[Players] Admin", divider=True)
 

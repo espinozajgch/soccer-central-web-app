@@ -12,7 +12,7 @@ def setup_page(title):
         initial_sidebar_state="expanded"
     )
 
-def iniciar_sesion_si_necesario():
+def login_if_needed():
     from utils import login  # se mete el import aqui, ya que si lo meto arriba se carga (EncryptedCookieManager, session_state) en import y falla, para que set_page_config sea el primer comando
     login.generarLogin()
     if "usuario" not in st.session_state:

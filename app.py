@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.util import setup_page, iniciar_sesion_si_necesario
+from utils.util import setup_page, login_if_needed
 import pandas as pd
 import numpy as np
 
@@ -8,7 +8,7 @@ import numpy as np
 setup_page("Soccer Central")
 
 # SEGUNDO: login
-iniciar_sesion_si_necesario()
+login_if_needed()
 
 # Primero configuramos los componentes de la pagina y luego llamamos a login configurando las cookie
 # Carga con la cookie
