@@ -24,6 +24,10 @@ tabs = st.tabs(["Add User", "Edit User", "Edit Player Profile"])
 # ===== TAB 1: ADD USER =====
 with tabs[0]:
     with Session(engine) as session:
+        if st.session_state.get("user_created_successfully"):
+            st.success("User created successfully.")
+            st.session_state["user_created_successfully"] = False
+
         roles = session.query(Roles).order_by(Roles.role_id).all()
         role_names = [r.role_name for r in roles]
 
@@ -47,7 +51,6 @@ with tabs[0]:
             country = st.text_input("Country")
             photo_url = st.text_input("Photo URL")
 
-            # If Player → show Player fields
             if selected_role_name == "Player":
                 st.subheader("Player Profile")
                 number = st.number_input("Jersey Number", value=0)
@@ -70,18 +73,6 @@ with tabs[0]:
                 last_team = st.text_input("Last Team")
                 dominant_foot = st.selectbox("Dominant Foot", ["Right", "Left", "Both", "Unknown"])
                 height = st.number_input("Height (cm)", value=170.0, step=1.0)
-                athlete_number = st.text_input("Athlete Number")
-                social_security_number = st.text_input("Social Security Number")
-                graduation_date = st.date_input("Graduation Date", value=date.today())
-                insurance_company = st.text_input("Insurance Company")
-                insurance_policy_number = st.text_input("Insurance Policy Number")
-                insurance_group_number = st.text_input("Insurance Group Number")
-                sanctioned_outside_us = st.checkbox("Sanctioned Outside US")
-                physician_name = st.text_input("Physician Name")
-                physician_phone = st.text_input("Physician Phone")
-                health_notes = st.text_area("Health Notes")
-                player_activity_history = st.text_area("Player Activity History")
-                notes = st.text_area("Notes")
 
             submitted = st.form_submit_button("Create User")
 
@@ -96,21 +87,13 @@ with tabs[0]:
                     st.error("A user with this email already exists.")
                 else:
                     try:
-                        # GENERAR HASH
                         password_hashed = hash_password(password)
-
-                        # LOG en consola:
-                        print("========== CREATE USER ==========")
-                        print(f"[INFO] Creating user: {email}")
-                        print(f"[INFO] Password entered: {password}")
-                        print(f"[INFO] Password hash: {password_hashed}")
-                        print("=================================")        
 
                         new_user = Users(
                             first_name=first_name,
                             last_name=last_name,
                             email=email,
-                            password_hash=hash_password(password),
+                            password_hash=password_hashed,
                             birth_date=birth_date,
                             gender=gender,
                             phone=phone,
@@ -143,25 +126,15 @@ with tabs[0]:
                                 education_level=education_level,
                                 last_team=last_team,
                                 dominant_foot=dominant_foot,
-                                height=height,
-                                athlete_number=athlete_number,
-                                social_security_number=social_security_number,
-                                graduation_date=graduation_date,
-                                insurance_company=insurance_company,
-                                insurance_policy_number=insurance_policy_number,
-                                insurance_group_number=insurance_group_number,
-                                sanctioned_outside_us=sanctioned_outside_us,
-                                physician_name=physician_name,
-                                physician_phone=physician_phone,
-                                health_notes=health_notes,
-                                player_activity_history=player_activity_history,
-                                notes=notes
+                                height=height
                             )
                             session.add(new_player)
 
                         session.commit()
-                        st.success("User created successfully.")
+
+                        st.session_state["user_created_successfully"] = True
                         st.rerun()
+
                     except Exception as e:
                         session.rollback()
                         st.error(f"Error: {e}")
@@ -169,6 +142,10 @@ with tabs[0]:
 # ===== TAB 2: EDIT USER =====
 with tabs[1]:
     with Session(engine) as session:
+        if st.session_state.get("user_updated_successfully"):
+            st.success("User updated successfully.")
+            st.session_state["user_updated_successfully"] = False
+
         users = session.query(Users).options(joinedload(Users.role)).order_by(Users.last_name).all()
         if not users:
             st.info("No users found.")
@@ -201,14 +178,20 @@ with tabs[1]:
 
             if submitted:
                 try:
-                    selected_user.first_name = first_name
-                    selected_user.last_name = last_name
-                    selected_user.email = email
-                    selected_user.phone = phone
-                    selected_user.country = country
-                    selected_user.role_id = role_id
+                    user = session.query(Users).filter_by(user_id=selected_user.user_id).one()
+
+                    user.first_name = first_name
+                    user.last_name = last_name
+                    user.email = email
+                    user.phone = phone
+                    user.country = country
+                    user.role_id = role_id
+
                     session.commit()
-                    st.success("User updated successfully.")
+
+                    st.session_state["user_updated_successfully"] = True
+                    st.rerun()
+
                 except Exception as e:
                     session.rollback()
                     st.error(f"Update error: {e}")
@@ -216,6 +199,10 @@ with tabs[1]:
 # ===== TAB 3: EDIT PLAYER =====
 with tabs[2]:
     with Session(engine) as session:
+        if st.session_state.get("player_updated_successfully"):
+            st.success("Player profile updated successfully.")
+            st.session_state["player_updated_successfully"] = False
+
         players = session.query(Players).options(joinedload(Players.user)).join(Users).filter(Users.role_id == 4).order_by(Users.last_name).all()
 
         if not players:
@@ -242,14 +229,20 @@ with tabs[2]:
 
             if submitted:
                 try:
-                    selected_player.number = number
-                    selected_player.school_name = school_name
-                    selected_player.primary_position = primary_position
-                    selected_player.secondary_position = secondary_position
-                    selected_player.dominant_foot = dominant_foot
-                    selected_player.height = height
+                    player = session.query(Players).filter_by(player_id=selected_player.player_id).one()
+
+                    player.number = number
+                    player.school_name = school_name
+                    player.primary_position = primary_position
+                    player.secondary_position = secondary_position
+                    player.dominant_foot = dominant_foot
+                    player.height = height
+
                     session.commit()
-                    st.success("Player profile updated successfully.")
+
+                    st.session_state["player_updated_successfully"] = True
+                    st.rerun()
+
                 except Exception as e:
                     session.rollback()
                     st.error(f"Error updating player: {e}")
