@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- [Login](https://trello.com/c/ORrbIGch/6-mejorar-login)
+    - Improved edit user and player profile with session-safe updates
+    - Added success message after saving edits with session state handling
+
 ### Added
 - [Player Evaluation](https://trello.com/c/4nMRTyJg/9-a%C3%B1adir-formulario-de-registro-de-jugadores)
     - Added player registration form
