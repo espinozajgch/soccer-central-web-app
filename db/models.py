@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from sqlalchemy import DECIMAL, Date, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, String, Text, Enum as SqlEnum
+from sqlalchemy import DECIMAL, Float, Date, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, String, Text, Enum as SqlEnum
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing import Optional
@@ -144,6 +144,10 @@ class Players(Base):
     player_teams: Mapped[List['PlayerTeams']] = relationship('PlayerTeams', back_populates='player')
     player_videos: Mapped[List['PlayerVideos']] = relationship('PlayerVideos', back_populates='player')
     player_assessments: Mapped[list['PlayerAssessments']] = relationship('PlayerAssessments', back_populates='player')
+    weight: Mapped[Optional[float]] = mapped_column(Float, comment='Peso del jugador agragdo como medida adicional')
+    body_fat_percentage: Mapped[Optional[float]] = mapped_column(Float, comment='Porcentaje de grasa del jugador agragdo como medida adicional')
+    last_measurement_date: Mapped[Optional[datetime.date]] = mapped_column(Date,comment='Ultima toma de medidas del jugador agragdo como medida adicional')
+
 
 
 class Videos(Base):
