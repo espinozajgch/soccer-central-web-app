@@ -82,8 +82,7 @@ def generarMenu(usuario):
         st.page_link("app.py", label="Home", icon=":material/home:")
         st.subheader(":material/dashboard: Dashboard")
         st.page_link("pages/player360.py", label="Player 360", icon=":material/contacts:")
-        st.page_link("pages/player_evaluation.py", label="Player Evaluation", icon=":material/description:")
-        st.page_link("pages/sc_player_evaluation.py", label="DEMO Player Evaluation", icon=":material/description:")
+        st.page_link("pages/sc_player_evaluation.py", label="Player Evaluation", icon=":material/description:")
 
         st.subheader(":material/manage_accounts: Administrator")
     
