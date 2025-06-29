@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- [User Management](https://trello.com/c/iBs8Op2G/11-mejorar-layout-visual-en-player-360)
+    - Added new fields to players table: weight, body_fat_percentage, last_measurement_date
+    - Extended player create/edit forms with all players table fields including the new ones
+
+### Changed
+- [Player 360](https://trello.com/c/iBs8Op2G/11-mejorar-layout-visual-en-player-360)
+    - Improved Player 360 UX/UI by adding new tabs: Anthropometry, Metrics, and Evaluations
+    - Enhanced player profile layout to display extended data
+
 ### Changed
 - [Login](https://trello.com/c/ORrbIGch/6-mejorar-login)
     - Improved edit user and player profile with session-safe updates

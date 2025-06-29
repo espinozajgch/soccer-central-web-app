@@ -94,88 +94,114 @@ def show_player_info():
     with Session(engine) as session:
         users = session.query(Users).filter(Users.role_id == 4).order_by(Users.last_name).all()
         user_options = [f"{u.first_name} {u.last_name}" for u in users]
-                
-        # Player selection with enhanced styling
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            selected_name = st.selectbox(
-                "Select Player for Analysis",
-                user_options,
-                help="Choose a player to view detailed analytics and performance metrics"
-            )
-        
+        selected_name = st.selectbox("Select Player for Analysis", user_options, help="Choose a player to view detailed analytics and performance metrics")
         selected_user = next(u for u in users if f"{u.first_name} {u.last_name}" == selected_name)
         player = selected_user.players[0] if selected_user.players else None
-        
+
         st.divider()
-        
-        # Enhanced player overview with metrics
-        with st.container():
-            overview_col1, overview_col2, overview_col3 = st.columns([1, 2, 1])
-            
-            with overview_col1:
-                photo_url = getattr(selected_user, "photo_url", None) or "https://images.pexels.com/photos/114296/pexels-photo-114296.jpeg"
-                player_number = getattr(player, "number", "N/A") if player else "N/A"
-                st.image(photo_url, width=250, caption=f"{selected_name}")
-                
-                # Quick stats sidebar
-                with st.container():
-                    st.subheader("Quick Stats")
-                    birth_date = pd.to_datetime(selected_user.birth_date, errors="coerce")
-                    age = calculate_age(birth_date) if pd.notnull(birth_date) else 0
-                    
-                    st.metric("Age", f"{age} years")
-                    st.metric("Nationality", getattr(player, "nationality", selected_user.country) if player else selected_user.country)
-                    primary_pos = getattr(player, "primary_position", "Not specified") if player else "Not specified"
-                    st.metric("Primary Position", primary_pos)
-            
-            with overview_col2:
-                st.subheader("Performance Overview")
-                
-                # Key performance metrics
-                perf_col1, perf_col2, perf_col3, perf_col4 = st.columns(4)
-                
-                registration_date = getattr(player, "registration_date", None) if player else None
-                #height = getattr(player, "height", "Not specified") if player else "Not specified"
-                grade_level = getattr(player, "grade_level", "Not specified") if player else "Not specified"
-                training_location = getattr(player, "training_location", "Not specified") if player else "Not specified"
-                
-                #with perf_col1:
-                    #st.metric("Height", f"{height} cm" if height != "Not specified" else height)
-                
-                with perf_col2:
-                    st.metric("Grade Level", grade_level)
-                
-                with perf_col3:
-                    st.metric("Training Location", training_location)
-                
-                with perf_col4:
-                    dominant_foot = getattr(player, "dominant_foot", "Not specified") if player else "Not specified"
-                    st.metric("Dominant Foot", dominant_foot)
-                
-            
-            with overview_col3:
-                st.subheader("Player Information")
-                
-                # Player details from database
-                school_name = getattr(player, "school_name", "Not specified") if player else "Not specified"
-                education_level = getattr(player, "education_level", "Not specified") if player else "Not specified"
-                last_team = getattr(player, "last_team", "Not specified") if player else "Not specified"
-                athlete_number = getattr(player, "athlete_number", "Not specified") if player else "Not specified"
-                
-                details = [
-                    ("School", school_name),
-                    ("Education Level", education_level),
-                    ("Last Team", last_team),
-                    ("Athlete Number", str(athlete_number)),
-                    ("Registration", str(registration_date) if registration_date else "Not specified")
-                ]
-                
-                for label, value in details:
-                    st.text(f"{label}: {value}")
-        
+
+        # Redesigned Header Section
+        photo_url = getattr(selected_user, "photo_url", None) or "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+        birth_date = pd.to_datetime(selected_user.birth_date, errors="coerce")
+        age = calculate_age(birth_date) if pd.notnull(birth_date) else "Not Available"
+
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            st.image(photo_url, width=160)
+        with col2:
+            st.markdown(f"### **{selected_user.first_name.upper()} {selected_user.last_name.upper()}**")
+            st.markdown(f"""
+                **ID:** `{getattr(player, 'player_id', 'Not Available')}` |
+                **Nationality:** `{getattr(player, 'nationality', selected_user.country) or 'Not Available'}`
+            """)
+            metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+            metric_col1.metric("Category", getattr(player, "grade_level", "Check in"))
+            metric_col2.metric("Position", getattr(player, "primary_position", "Not available"))
+            metric_col3.metric("Birth Date", birth_date.strftime('%d/%m/%Y') if pd.notnull(birth_date) else "Not Available")
+            metric_col4.metric("Age", f"{age} years" if age != "Not Available" else "Not Available")
+
         st.divider()
-        
+
+        # New Analytics Tabs
+        analytics_tab1, analytics_tab2, analytics_tab3 = st.tabs([
+            "Anthropometry",
+            "Metrics",
+            "Evaluations"
+        ])
+
+        with analytics_tab1:
+            st.subheader("Anthropometric Evaluation")
+            col_a, col_b, col_c = st.columns(3)
+            height = getattr(player, "height", None)
+            weight = getattr(player, "weight", None)
+            fat = getattr(player, "body_fat_percentage", None)
+            date = getattr(player, "last_measurement_date", None)
+            with col_a:
+                st.metric("Height (cm)", f"{height:.2f}" if height else "Not Available", delta=f"{height:.2f}" if height else None)
+            with col_b:
+                st.metric("Weight (kg)", f"{weight:.2f}" if weight else "Not Available", delta=f"{weight:.2f}" if weight else None)
+            with col_c:
+                st.metric("Body Fat (%)", f"{fat:.2f}" if fat else "Not Available")
+            st.markdown(f"**Last Measurement Date:** {date.strftime('%d/%m/%Y') if date else 'Not Available'}")
+            if fat is not None:
+                if fat <= 14:
+                    st.success("Body fat level is in the ideal range for high-performance athletes.")
+                elif fat <= 18:
+                    st.warning("Body fat level is acceptable, but could be improved.")
+                else:
+                    st.error("Body fat level is above the recommended range.")
+            else:
+                st.info("No body fat data available.")
+
+        with analytics_tab2:
+            st.subheader("Player Metrics")
+            if player:
+                metrics = player.metrics
+                if metrics:
+                    for m in metrics:
+                        with st.expander(f"Metric: {m.drill_name or 'Unnamed'} on {m.training_date.strftime('%Y-%m-%d') if m.training_date else 'N/A'}", expanded=False):
+                            col1, col2, col3 = st.columns(3)
+                            col1.write(f"**Drill:** {m.drill_name}")
+                            col2.write(f"**Level:** {m.level}")
+                            col3.write(f"**Goal:** {m.goal}")
+
+                            col4, col5, col6 = st.columns(3)
+                            col4.metric("Hits", m.hits)
+                            col5.metric("Misses", m.misses)
+                            col6.metric("Drops", m.drops)
+
+                            col7, col8, col9 = st.columns(3)
+                            col7.metric("Correct", m.correct)
+                            col8.metric("Wrong", m.wrong)
+                            col9.metric("Distractions", m.distraction)
+
+                            st.metric("Avg Reaction Time", f"{m.avg_reaction_time}s" if m.avg_reaction_time else "N/A")
+                            if m.notes:
+                                st.text_area("Notes", m.notes, disabled=True)
+                else:
+                    st.info("No metrics found for this player.")
+            else:
+                st.warning("No player selected.")
+
+        with analytics_tab3:
+            st.subheader("Player Evaluations")
+            if player:
+                evaluations = player.player_evaluations
+                if evaluations:
+                    for e in evaluations:
+                        with st.expander(f"Evaluation: {e.metric_name or 'Unnamed'} on {e.evaluation_date.strftime('%Y-%m-%d') if e.evaluation_date else 'N/A'}", expanded=False):
+                            col1, col2 = st.columns(2)
+                            col1.write(f"**Category:** {e.category}")
+                            col2.write(f"**Metric:** {e.metric_name}")
+
+                            st.metric("Value", e.value)
+
+                            if e.notes:
+                                st.text_area("Notes", e.notes, disabled=True)
+                else:
+                    st.info("No evaluations found for this player.")
+            else:
+                st.warning("No player selected.")
         # Enhanced tabbed interface
         tab1, tab2, tab3, tab4 = st.tabs([
             "Player Profile", 
