@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- [Translate README and CONTRIBUTING files](https://trello.com/c/msOmla7L/13-translate-readmemd-to-english)
+    - Translated `README.md` file
+    - Translated `CONTRIBUTING.md` file
+
+### Changed
 - [Players Assessment](https://trello.com/c/mUnuSPrA/8-dise%C3%B1ar-fomularios-para-evaluacion-de-jugadores)
     - Modified categories to include Core Values
 
