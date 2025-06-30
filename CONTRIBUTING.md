@@ -1,17 +1,17 @@
 ## Contributing Guidelines for Soccer Central Web App (Python + Streamlit)
 
-Gracias por tu interés en contribuir a Soccer Central. Este proyecto busca mantener estándares de calidad y claridad en el código. Por favor, sigue estas pautas antes de enviar una contribución.
+Thank you for your interest in contributing to Soccer Central. This project aims to maintain high standards of code quality and clarity. Please follow these guidelines before submitting a contribution.
 
 ---
 
-### 🛠️ Requisitos del Entorno
+### 🛠️ Environment Requirements
 
 * Python 3.10+
 * Streamlit
 * SQLAlchemy
-* Otros paquetes listados en `requirements.txt`
+* Other packages listed in `requirements.txt`
 
-Instalación de dependencias:
+Install dependencies with:
 
 ```bash
 pip install -r requirements.txt
@@ -19,61 +19,61 @@ pip install -r requirements.txt
 
 ---
 
-### 🧱 Convenciones de Código
+### 🧱 Code Conventions
 
-* Usa `snake_case` para funciones y variables: `get_player_data()`
-* Usa `CamelCase` para clases: `PlayerModel`
-* Usa `MAYUSCULAS_CON_GUIONES` para constantes: `MAX_SCORE`
-
----
-
-### 📄 Estructura del Proyecto
-
-* `app.py`: página principal
-* `pages/`: páginas secundarias de Streamlit (ej. `sc_assessments.py`)
-* `models/`: clases SQLAlchemy (ORM)
-* `utils/`: funciones auxiliares (login, formateos, etc.)
-* `db/`: configuración y conexión a base de datos
-* `assets/`: imágenes, logotipos, etc.
+* Use `snake_case` for functions and variables: `get_player_data()`
+* Use `CamelCase` for classes: `PlayerModel`
+* Use `UPPER_SNAKE_CASE` for constants: `MAX_SCORE`
 
 ---
 
-### 📑 Convención para Páginas de Streamlit
+### 📄 Project Structure
 
-* `pages/player360.py` → Reporte 360° del jugador
-* `pages/player_evaluation.py` → Evaluación de rendimiento
-
-Usa prefijos como `sc_` para agrupar funcionalidad relacionada a Soccer Central.
-
----
-
-### 🧪 Buenas Prácticas
-
-* Agrupa la lógica principal en una función `main()`.
-* Usa `if __name__ == '__main__': main()`
-* Añade docstrings y comentarios útiles
-* Evita repetir código innecesario
-* Usa `@st.cache_resource` donde sea útil para rendimiento
-* Usa `st.session_state` para manejar la sesión del usuario
+* `app.py`: main page
+* `pages/`: additional Streamlit pages (e.g., `sc_assessments.py`)
+* `models/`: SQLAlchemy classes (ORM)
+* `utils/`: helper functions (login, formatting, etc.)
+* `db/`: database configuration and connection
+* `assets/`: images, logos, etc.
 
 ---
 
-### 🔐 Seguridad
+### 📑 Streamlit Page Naming Convention
 
-* Nunca subas contraseñas ni claves API
-* Usa variables de entorno (ej. `.env`) para datos sensibles
-* No subas `.env`, `.sqlite` o credenciales en Git
+* `pages/player360.py` → 360° Player Report
+* `pages/player_evaluation.py` → Performance Evaluation
+
+Use prefixes like `sc_` to group functionality related to Soccer Central.
 
 ---
 
-### 🧼 Formato y Linter
+### 🧪 Best Practices
 
-* Usa [Black](https://black.readthedocs.io/en/stable/) como formateador automático:
+* Wrap the main logic in a `main()` function.
+* Use `if __name__ == '__main__': main()`
+* Add helpful docstrings and comments
+* Avoid unnecessary code repetition
+* Use `@st.cache_resource` where appropriate for performance
+* Use `st.session_state` to manage user session
+
+---
+
+### 🔐 Security
+
+* Never commit passwords or API keys
+* Use environment variables (e.g., `.env`) for sensitive data
+* Do not upload `.env`, `.sqlite`, or credentials to Git
+
+---
+
+### 🧼 Formatting & Linting
+
+* Use [Black](https://black.readthedocs.io/en/stable/) as the automatic formatter:
 
   ```bash
   black .
   ```
-* Usa `isort` para ordenar imports:
+* Use `isort` to organize imports:
 
   ```bash
   isort .
@@ -83,18 +83,19 @@ Usa prefijos como `sc_` para agrupar funcionalidad relacionada a Soccer Central.
 
 ### 🧪 Testing
 
-* Usa `pytest` para pruebas unitarias
-* Testea funciones críticas (validaciones, transformaciones, acceso a DB)
+* Use `pytest` for unit testing
+* Test critical functions (validation, transformations, DB access)
 
 ---
 
 ### ✅ Pull Requests
 
-Antes de enviar un PR:
+Before submitting a PR:
 
-1. Asegúrate de que todo funcione (`streamlit run app.py`)
-2. Asegúrate de que no subes archivos locales (`.venv`, `.env`, `.DS_Store`, etc.)
-3. Comenta claramente lo que hace tu contribución
-4. Añade capturas o descripciones si afecta a la UI
+1. Make sure everything runs (`streamlit run app.py`)
+2. Ensure no local files are committed (`.venv`, `.env`, `.DS_Store`, etc.)
+3. Clearly describe what your contribution does
+4. Include screenshots or descriptions if it affects the UI
 
-Gracias por contribuir a Soccer Central 🙌
+Thank you for contributing to Soccer Central 🙌
+
