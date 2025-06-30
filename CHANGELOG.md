@@ -31,3 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Player reports and 360 dashboard
 - [Login](https://trello.com/c/TOqsAhot/1-login)
     - Login and menu
+
+### Changed
+ - [Player Evaluation](https://trello.com/c/mUnuSPrA/8-dise%C3%B1ar-fomularios-para-evaluacion-de-jugadores)
+    - Remove previous player evaluation file
+    - Update navigation menu regarding only evaluation page left
+    - Add virtualenv to .gitignore
+    - Keep previous evaluation MySQL tables for Byga or Taka
+    - Clean references about unused pages
