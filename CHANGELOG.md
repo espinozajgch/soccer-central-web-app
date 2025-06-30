@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- [Players Assessment](https://trello.com/c/mUnuSPrA/8-dise%C3%B1ar-fomularios-para-evaluacion-de-jugadores)
+    - Modified categories to include Core Values
+
 ### Added
 - [User Management](https://trello.com/c/iBs8Op2G/11-mejorar-layout-visual-en-player-360)
     - Added new fields to players table: weight, body_fat_percentage, last_measurement_date
