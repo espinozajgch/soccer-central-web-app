@@ -178,5 +178,6 @@ cython_debug/
 # Ignorar imágenes
 assets/images/
 venv
+soccer_env
 
 .idea/

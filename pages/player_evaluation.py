@@ -1,10 +1,9 @@
 import streamlit as st
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import distinct
+from sqlalchemy.orm import joinedload
 from db.db import SessionLocal
-from utils import login
-from db.models import PlayerAssessments, Players, Users
-from db.db import get_db_session
-import datetime
+from db.models import Players, Users, CoreValue, Programs, PlayerAssessments
+from datetime import date, datetime
 from utils import util
 
 util.setup_page("Player Evaluation")
@@ -14,104 +13,179 @@ util.login_if_needed()
 
 st.header(":blue[Players] Evaluation", divider=True)
 
-def show_player_assessments_page():
+# Rayner colours
+BRAND_COLORS =util.get_brand_colors_list()
 
-  with get_db_session() as session:
+def color_html(text: str, color: str, bold: bool = True):
+    weight = 'bold' if bold else 'normal'
+    return f"<span style='color:{color}; font-weight:{weight}'>{text}</span>"
 
-    # Cargamos todos los jugadores con su usuario relacionado
-    jugadores = session.query(Players).options(joinedload(Players.user)).join(Users).filter(Players.user_id == Users.user_id).all()
+def calc_age(birthdate: date) -> int:
+    today = date.today()
+    return (today.year - birthdate.year) - ((today.month, today.day) < (birthdate.month, birthdate.day))
 
-    # Extraemos valores únicos para los filtros
-    posiciones = sorted({p.primary_position for p in jugadores if p.primary_position})
-    escuelas = sorted({p.school_name for p in jugadores if p.school_name})
-    numeros = sorted({p.number for p in jugadores if p.number is not None})
-    anios_nacimiento = sorted({u.birth_date.year for p in jugadores if p.user and p.user.birth_date for u in [p.user]})
-    equipos = sorted({p.last_team for p in jugadores if p.last_team})
+@st.cache_resource
+def init_core_values_and_programs():
+    with SessionLocal() as session:
+        if not session.query(CoreValue).first():
+            session.add_all([
+                CoreValue(name="Discipline", description="Daily excellence through intentional action. Punctuality, preparation, focus during training, and consistent effort in all activities."),
+                CoreValue(name="Wellbeing", description="Holistic care of body and mind. Physical conditioning, injury prevention, nutrition awareness, and overall health management."),
+                CoreValue(name="Resilience", description="Strength through adversity. Ability to bounce back from setbacks, handle pressure, and maintain performance under stress."),
+                CoreValue(name="Growth Mindset", description="Learning through effort, curiosity, and feedback. Openness to instruction, willingness to try new things, and continuous improvement."),
+                CoreValue(name="Teamwork", description="Unity, trust, and shared purpose. Collaboration with teammates, leadership qualities, and positive team dynamics."),
+            ])
 
-    # Formulario con selectores dinámicos
-    with st.form("form_filtros"):
-        col1, col2 = st.columns(2)
-        with col1:
-            filtro_nombre = st.text_input("Nombre o Apellido contiene")
-            filtro_posicion = st.selectbox("Posición primaria", [""] + posiciones)
-            filtro_escuela = st.selectbox("Escuela", [""] + escuelas)
-        with col2:
-            filtro_numero = st.selectbox("Número de camiseta", [""] + [str(n) for n in numeros])
-            filtro_anio = st.selectbox("Año de nacimiento", [""] + [str(a) for a in anios_nacimiento])
-            filtro_equipo = st.selectbox("Último equipo", [""] + equipos)
+        if not session.query(Programs).first():
+            session.add_all([
+                Programs(name="AC RIVER HIGH PERFORMANCE ACADEMY"),
+                Programs(name="SA ATHENIANS HIGH PERFORMANCE ACADEMY"),
+                Programs(name="AC RIVER YOUTH ACADEMY"),
+                Programs(name="SA ATHENIANS YOUTH ACADEMY"),
+                Programs(name="MLS GO"),
+                Programs(name="SKILLS ACADEMY"),
+            ])
 
-        aplicar_filtro = st.form_submit_button("Aplicar filtros")
+        session.commit()
 
-    # Construimos la query dinámica
-    query = session.query(Players).options(joinedload(Players.user)).join(Users).filter(Players.user_id == Users.user_id)
+def show_filters():
+    init_core_values_and_programs()
 
+    with SessionLocal() as session:
+        players = session.query(Players).join(Players.user).options(joinedload(Players.user)).filter(Users.role_id == 4).all()
+        posiciones = [row[0] for row in session.query(distinct(Players.primary_position)).filter(Players.primary_position.isnot(None)).all() if row[0]]
+        coaches = session.query(Users).filter(Users.role_id == 2).all()
+        core_vals = session.query(CoreValue).all()
+        programs = session.query(Programs).all()
 
-    if filtro_nombre:
-        query = query.filter(
-            (Users.first_name.ilike(f"%{filtro_nombre}%")) |
-            (Users.last_name.ilike(f"%{filtro_nombre}%"))
-        )
-    if filtro_posicion:
-        query = query.filter(Players.primary_position == filtro_posicion)
-    if filtro_escuela:
-        query = query.filter(Players.school_name == filtro_escuela)
-    if filtro_numero:
-        query = query.filter(Players.number == int(filtro_numero))
-    if filtro_anio:
-        query = query.filter(Users.birth_date.like(f"{filtro_anio}-%"))
-    if filtro_equipo:
-        query = query.filter(Players.last_team == filtro_equipo)
+    if not players:
+        st.warning("No se encontraron jugadores en la base de datos.")
+        return
 
-    # Ejecutamos
-    jugadores_filtrados = query.all()
+    def fmt_player(i):
+        p = players[i]
+        bd = p.user.birth_date
+        age = calc_age(bd) if bd else "N/A"
+        return f"{p.user.first_name} {p.user.last_name} ({age} years)"
 
-    # Mostramos el selectbox si hay resultados
-    if not jugadores_filtrados:
-        st.warning("No se encontraron jugadores con esos filtros.")
-    else:
-        jugadores_dict = {
-            f"{p.player_id} | {p.user.first_name} {p.user.last_name} | #{p.number or ''} | {p.primary_position or ''}": p.player_id
-            for p in jugadores_filtrados
-        }
-        jugador_seleccionado = st.selectbox("Selecciona un jugador:", list(jugadores_dict.keys()))
-        player_id = jugadores_dict[jugador_seleccionado]
+    idx = st.selectbox("Player Name", range(len(players)), format_func=fmt_player)
+    selected = players[idx]
+    age = calc_age(selected.user.birth_date)
 
-        # Evaluaciones del jugador seleccionado
-        evaluaciones = session.query(PlayerAssessments).filter_by(player_id=player_id).all()
+    default_group = "U6-U8" if age <= 8 else "U9-U10" if age <= 10 else "U11-U12" if age <= 12 else "U13-U15" if age <= 15 else "U16-U19"
+    age_groups = ["U6-U8", "U9-U10", "U11-U12", "U13-U15", "U16-U19"]
 
-        st.subheader("Evaluaciones existentes")
-        for idx, eval in enumerate(evaluaciones):
-            with st.expander(f"{eval.category}: {eval.item} ({eval.value}) - {eval.created_at.date()}"):
-                st.write(f"Notas: {eval.notes or 'Sin notas'}")
-                st.write(f"Coach: {eval.coach.first_name if eval.coach else 'Desconocido'}")
+    coach_map = {f"{c.first_name} {c.last_name}": c.user_id for c in coaches}
+    program_map = {p.id: p.name for p in programs}
+    prog_inv = {v: k for k, v in program_map.items()}
+    program_opts = [""] + list(program_map.values())
+    position_opts = [""] + sorted(posiciones)
 
-        st.divider()
+    st.subheader("Setting Filters", divider="blue")
+    col1, col2, col3 = st.columns(3)
 
-        st.subheader("Agregar nueva evaluación")
-        coach_id = session.query(Users).filter(Users.email == st.session_state.usuario).first().user_id
-        category = st.selectbox("Categoría", ["technical", "physical", "mental"])
-        item = st.text_input("Ítem evaluado")
-        value = st.slider("Valor", min_value=1, max_value=5, step=1)
-        notes = st.text_area("Notas", placeholder="Notas adicionales del coach (opcional)")
-        btn = st.button("Guardar evaluación")
+    with col1:
+        st.text_input("Player Name", value=f"{selected.user.first_name} {selected.user.last_name} ({age} years)", disabled=True)
+        age_group = st.selectbox("Age Group", age_groups, index=age_groups.index(default_group))
+    with col2:
+        position = st.selectbox("Position", position_opts, index=position_opts.index(selected.primary_position) if selected.primary_position in position_opts else 0)
+        evaluation_date = st.date_input("Evaluation Date", value=date.today())
+    with col3:
+        evaluator = st.selectbox("Coach/Evaluator", list(coach_map.keys()))
+        program = st.selectbox("Program", program_opts)
 
-        if btn:
-            nueva_eval = PlayerAssessments(
-                player_id=player_id,
-                coach_id=coach_id,
-                category=category,
-                item=item,
-                value=value,
-                notes=notes,
-                created_at=datetime.datetime.utcnow()
-            )
-            session.add(nueva_eval)
-            session.commit()
-            st.success("✅ Evaluación guardada correctamente")
-            st.rerun()
+    st.markdown("---")
+    st.write("**Filtros seleccionados:**")
+    st.write(f"- Player Name: {selected.user.first_name} {selected.user.last_name}")
+    st.write(f"- Age Group: {age_group}")
+    st.write(f"- Position: {position}")
+    st.write(f"- Evaluation Date: {evaluation_date}")
+    st.write(f"- Coach/Evaluator: {evaluator}")
+    st.write(f"- Program: {program}")
+
+    tab_labels = [
+        "1. Core Values",
+        "2. Technical Skills (Ball Mastery)",
+        "3. Tactical Understanding (Game Model)",
+        "4. Physical Performance (High Performance Model)",
+        "5. Match Performance & Consistency",
+        "6. Leadership & Character Development"
+    ]
+    tabs = st.tabs(tab_labels)
+
+    def save_tab(items, category, comment_key_prefix, slider_max, slider_default, key_prefix):
+        ratings = {}
+        for idx, item in enumerate(items):
+            ratings[item] = st.slider(item, 1, slider_max, slider_default, key=f"{key_prefix}_{idx}")
+        comments = st.text_area(f"{category} Comments", key=f"{comment_key_prefix}_comments", height=100)
+        if st.button(f"Save {category}", key=f"save_{category}"):
+            with SessionLocal() as session:
+                for item in items:
+                    session.add(PlayerAssessments(
+                        player_id=selected.player_id,
+                        coach_id=coach_map[evaluator],
+                        category=category,
+                        core_value_id=None,
+                        program_id=prog_inv.get(program),
+                        item=item,
+                        value=ratings[item],
+                        notes=comments,
+                        created_at=datetime.now()
+                    ))
+                session.commit()
+            st.success(f"{category} saved ✅")
+
+    with tabs[0]:
+        st.subheader("Core Values")
+        ratings_cv = {}
+        comments_cv = {}
+        for idx, val in enumerate(core_vals):
+            c = BRAND_COLORS[idx % len(BRAND_COLORS)]
+            st.markdown(color_html(val.name.upper(), c), unsafe_allow_html=True)
+            ratings_cv[val.name] = st.slider(val.name, 1, 10, 5, key=f"cv_{idx}")
+            st.caption(val.description or "")
+            comments_cv[val.name] = st.text_area(f"Comments for {val.name}", placeholder="Your observations here...!", key=f"comment_{idx}", height=80)
+            st.write("---")
+
+        if st.button("Save Core Values", key="save_core"):
+            with SessionLocal() as session:
+                for val in core_vals:
+                    session.add(PlayerAssessments(
+                        player_id=selected.player_id,
+                        coach_id=coach_map[evaluator],
+                        category="Valores",
+                        core_value_id=val.id,
+                        program_id=prog_inv.get(program),
+                        item=val.name,
+                        value=ratings_cv[val.name],
+                        notes=comments_cv[val.name],
+                        created_at=datetime.now()
+                    ))
+                session.commit()
+            st.success("¡Core Values saved!")
+
+    with tabs[1]:
+        st.subheader("Technical Skills (Ball Mastery)")
+        save_tab(["First touch", "Dribbling", "Passing accuracy", "Shooting technique", "Overall ball control"], "Técnico", "tech", 5, 3, "tech")
+
+    with tabs[2]:
+        st.subheader("Tactical Understanding (Game Model)")
+        save_tab(["Understanding of MWB", "Understanding of MNB", "Understanding of transition principles", "Decision-making in different game moments"], "Táctico", "tac", 5, 3, "tac")
+
+    with tabs[3]:
+        st.subheader("Physical Performance (High Performance Model)")
+        save_tab(["Speed", "Agility", "Strength", "Endurance", "Movement quality"], "Físico", "phys", 5, 3, "phys")
+
+    with tabs[4]:
+        st.subheader("Match Performance & Consistency")
+        save_tab(["Ability to transfer training to match situations", "Consistency in performance, Impact on team success"], "Colectivo", "match", 5, 3, "match")
+
+    with tabs[5]:
+        st.subheader("Leadership & Character Development")
+        save_tab(["Embodiment of all five core values", "Positive influence on others", "Character development beyond soccer"], "Mental", "lead", 5, 3, "lead")
 
 def main():
-    show_player_assessments_page()
+    show_filters()
 
 if __name__ == "__main__":
     main()
