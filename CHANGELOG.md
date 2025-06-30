@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+ - [Player Evaluation](https://trello.com/c/mUnuSPrA/8-dise%C3%B1ar-fomularios-para-evaluacion-de-jugadores)
+    - Remove previous player evaluation file
+    - Update navigation menu regarding only evaluation page left
+    - Add virtualenv to .gitignore
+    - Keep previous evaluation MySQL tables for Byga or Taka
+    - Clean references about unused pages
+
+### Changed
 - [Login](https://trello.com/c/ORrbIGch/6-mejorar-login)
     - Improved edit user and player profile with session-safe updates
     - Added success message after saving edits with session state handling
@@ -32,10 +40,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Login](https://trello.com/c/TOqsAhot/1-login)
     - Login and menu
 
-### Changed
- - [Player Evaluation](https://trello.com/c/mUnuSPrA/8-dise%C3%B1ar-fomularios-para-evaluacion-de-jugadores)
-    - Remove previous player evaluation file
-    - Update navigation menu regarding only evaluation page left
-    - Add virtualenv to .gitignore
-    - Keep previous evaluation MySQL tables for Byga or Taka
-    - Clean references about unused pages
