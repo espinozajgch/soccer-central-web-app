@@ -82,27 +82,32 @@ class SoccerRAGService:
         
         schema_info = self._get_database_schema()
         
-        system_prompt = f"""You are an expert SQL query generator for a soccer management database.
-        
+        system_prompt = f"""You are a soccer technical expert and SQL query generator for a professional soccer management database.
+
+        CRITICAL: Only generate SQL queries for soccer/football-related questions. If the question is about cooking, recipes, general knowledge, or any non-soccer topic, return an empty string.
+
         Database Schema:
         {schema_info}
-        
-        Generate SQL queries that:
-        1. Answer the user's question accurately
-        2. Join tables appropriately to get complete information
-        3. Include relevant player details (name, age, position, etc.)
-        4. Use proper date filtering when needed
-        5. Limit results to reasonable numbers (use LIMIT when appropriate)
-        6. Handle edge cases gracefully
-        
-        Important Notes:
-        - Player ages should be calculated from birth_date in users table
-        - Always include player names from users table (first_name, last_name)
-        - For recent data, prioritize recent dates
-        - Use proper SQL syntax for MySQL
-        
-        Return ONLY the SQL query, no explanations or markdown formatting.
-        """
+
+        As a soccer technical expert, generate SQL queries that:
+        1. Answer soccer-specific questions with technical precision
+        2. Join tables to provide comprehensive player/team/performance data
+        3. Include relevant soccer metrics (goals, assists, positions, evaluations, training data)
+        4. Calculate player ages, performance statistics, and team analytics
+        5. Use proper date filtering for seasons, match periods, and training cycles
+        6. Limit results appropriately for soccer analysis (top performers, recent data)
+        7. Focus on soccer technical aspects: tactics, player development, performance analysis
+
+        Soccer Technical Guidelines:
+        - Player ages: TIMESTAMPDIFF(YEAR, u.birth_date, CURDATE())
+        - Always include player identification (first_name, last_name, position)
+        - For performance queries, include relevant metrics and evaluation data
+        - For team analysis, consider player-team relationships and composition
+        - For training data, focus on skill development and improvement trends
+        - Use proper soccer terminology and statistical context
+
+        Return ONLY the SQL query for soccer questions, empty string for non-soccer topics.
+        No explanations or markdown formatting."""
         
         try:
             self._ensure_client()
@@ -226,23 +231,35 @@ class SoccerRAGService:
             Natural language response
         """
         
-        system_prompt = """You are a knowledgeable soccer analytics assistant for Soccer Central.
-        
-        Your role is to:
-        1. Provide accurate information based on the database context
-        2. Explain soccer metrics and statistics in an understandable way
-        3. Offer insights and analysis when appropriate
-        4. Be helpful and professional in your responses
-        5. If the data is insufficient, suggest what additional information might be helpful
-        
-        Guidelines:
-        - Use the provided database context to answer questions accurately
-        - Explain technical terms when needed
-        - Provide actionable insights when possible
-        - If dates are involved, be specific about timeframes
-        - Format numbers and statistics clearly
-        - Be concise but thorough
-        """
+        system_prompt = """You are a professional soccer technical expert and analytics specialist for Soccer Central.
+
+        CRITICAL ROLE DEFINITION:
+        - You are EXCLUSIVELY a soccer/football technical expert
+        - You ONLY answer questions related to soccer, football, players, teams, training, tactics, and performance
+        - You REFUSE to answer questions about cooking, recipes, general knowledge, or any non-soccer topics
+        - You provide expert-level soccer analysis enriched with database information
+
+        Your soccer expertise includes:
+        1. Player technical analysis and development assessment
+        2. Team composition, tactics, and formation analysis  
+        3. Performance metrics interpretation and trends
+        4. Training program effectiveness and player progression
+        5. Match analysis and statistical evaluation
+        6. Youth development and player pathway guidance
+        7. Injury prevention and fitness optimization strategies
+
+        Response Guidelines:
+        - ONLY respond to soccer-related questions using the provided database context
+        - Provide technical soccer insights with supporting data from the database
+        - Explain soccer metrics, positions, tactics, and performance indicators
+        - Offer actionable recommendations for player development and team improvement
+        - Use professional soccer terminology and statistical analysis
+        - Reference specific database records to support your technical analysis
+        - If database context is limited, suggest additional soccer-specific data points needed
+
+        For NON-SOCCER questions: Respond with "I'm a soccer technical expert and can only provide analysis on soccer-related topics. Please ask about player performance, team tactics, training metrics, or match analysis."
+
+        Format soccer statistics clearly and provide context for technical development."""
         
         user_prompt = f"""Question: {question}
         
@@ -282,24 +299,33 @@ class SoccerRAGService:
             Dictionary containing response and metadata
         """
         try:
-            # Step 1: Generate SQL query
-            sql_query = self.generate_sql_query(question, user_context)
-            
-            if not sql_query:
+            # Step 1: Validate if question is soccer-related
+            if not self.is_soccer_related(question):
                 return {
-                    "answer": "I couldn't generate a proper query for your question. Please try rephrasing it.",
+                    "answer": "I'm a soccer technical expert and can only provide analysis on soccer-related topics. Please ask about player performance, team tactics, training metrics, match analysis, or other soccer/football topics.\n\nExamples:\n• 'Show me the top 10 players by goals scored'\n• 'What's the average age of players in each team?'\n• 'Which players need improvement in technical skills?'\n• 'Analyze recent training metrics for goalkeepers'",
                     "sql_query": "",
                     "data": [],
                     "success": False
                 }
             
-            # Step 2: Execute query
+            # Step 2: Generate SQL query
+            sql_query = self.generate_sql_query(question, user_context)
+            
+            if not sql_query:
+                return {
+                    "answer": "I couldn't generate a proper soccer database query for your question. Please rephrase it with more specific soccer terminology (players, teams, positions, performance metrics, etc.).\n\nTry asking about specific soccer data like player statistics, team composition, match results, or training evaluations.",
+                    "sql_query": "",
+                    "data": [],
+                    "success": False
+                }
+            
+            # Step 3: Execute query
             data = self.execute_query(sql_query)
             
-            # Step 3: Build context
+            # Step 4: Build context
             context = self.build_context(data, question)
             
-            # Step 4: Generate response
+            # Step 5: Generate response
             answer = self.generate_response(question, context, user_context)
             
             return {
@@ -313,7 +339,7 @@ class SoccerRAGService:
         except Exception as e:
             logger.error(f"Error in RAG query: {e}")
             return {
-                "answer": "I encountered an error while processing your question. Please try again.",
+                "answer": "I encountered an error while processing your soccer question. Please try again with a more specific soccer-related query.",
                 "sql_query": "",
                 "data": [],
                 "success": False
@@ -367,6 +393,76 @@ class SoccerRAGService:
         """
         
         return schema
+    
+    def is_soccer_related(self, question: str) -> bool:
+        """
+        Check if the question is related to soccer/football topics.
+        
+        Args:
+            question: User's natural language question
+            
+        Returns:
+            True if soccer-related, False otherwise
+        """
+        soccer_keywords = [
+            # Core soccer terms
+            'soccer', 'football', 'player', 'players', 'team', 'teams', 'coach', 'coaching',
+            'goal', 'goals', 'assist', 'assists', 'match', 'matches', 'game', 'games',
+            
+            # Positions and roles
+            'goalkeeper', 'defender', 'midfielder', 'forward', 'striker', 'winger',
+            'captain', 'substitute', 'bench', 'position', 'positions',
+            
+            # Training and performance
+            'training', 'practice', 'drill', 'skill', 'skills', 'performance', 'fitness',
+            'evaluation', 'assessment', 'metric', 'metrics', 'statistics', 'stats',
+            
+            # Technical terms
+            'tactics', 'formation', 'strategy', 'technique', 'passing', 'shooting',
+            'dribbling', 'defending', 'attacking', 'speed', 'agility', 'strength',
+            
+            # Competition terms
+            'season', 'tournament', 'league', 'championship', 'score', 'result',
+            'win', 'loss', 'draw', 'victory', 'defeat',
+            
+            # Physical attributes
+            'height', 'weight', 'age', 'fitness', 'injury', 'recovery',
+            
+            # Database terms
+            'users', 'evaluations', 'assessments', 'grades', 'ratings'
+        ]
+        
+        # Non-soccer terms that indicate off-topic questions
+        non_soccer_terms = [
+            'recipe', 'cooking', 'food', 'kitchen', 'ingredient', 'meal', 'dish',
+            'sandwich', 'pizza', 'pasta', 'cheese', 'bread', 'restaurant',
+            'weather', 'temperature', 'rain', 'sun', 'climate',
+            'movie', 'film', 'actor', 'actress', 'cinema', 'theater',
+            'music', 'song', 'album', 'artist', 'concert', 'band',
+            'book', 'novel', 'author', 'reading', 'literature',
+            'programming', 'code', 'software', 'computer', 'technology',
+            'politics', 'government', 'president', 'election',
+            'history', 'ancient', 'historical', 'war', 'battle'
+        ]
+        
+        question_lower = question.lower()
+        
+        # Check for non-soccer terms first (priority rejection)
+        if any(term in question_lower for term in non_soccer_terms):
+            return False
+            
+        # Check for soccer terms
+        if any(term in question_lower for term in soccer_keywords):
+            return True
+            
+        # Check for common database query patterns that might be soccer-related
+        query_patterns = ['how many', 'show me', 'list', 'find', 'what are', 'which', 'who']
+        if any(pattern in question_lower for pattern in query_patterns):
+            # If it has query patterns but no clear soccer context, it's ambiguous
+            # Let it pass to the SQL generator which will return empty for non-soccer
+            return True
+            
+        return False
 
 # Create a singleton instance
 rag_service = SoccerRAGService()
