@@ -6,7 +6,7 @@ passlib[bcrypt]==1.7.4
 cffi>=1.15.1
 seaborn==0.13.2
 streamlit==1.42.2
-SQLAlchemy~=2.0.40
+SQLAlchemy>=1.4,<2.0.36
 reportlab==4.1.0  # Para generación de PDF más complejos
 fpdf==1.7.2       # Alternativa ligera para PDFs
 plotly
@@ -16,3 +16,6 @@ mysql-connector-python==8.3.0
 selenium
 pyjwt
 streamlit-cookies-manager
+openai==1.57.0
+tiktoken==0.8.0
+python-dotenv==1.0.0  # For environment variable management

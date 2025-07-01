@@ -6,7 +6,7 @@ import jwt
 import datetime
 from auth import get_user
 from db.db import check_password, engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from db.models import Users
 from streamlit_cookies_manager import EncryptedCookieManager
@@ -71,7 +71,11 @@ def get_logged_in_user():
         return None
 
     with Session(engine) as session:
-        return session.query(Users).filter(Users.email == st.session_state["usuario"]).first()
+        user = session.query(Users).options(joinedload(Users.role)).filter(Users.email == st.session_state["usuario"]).first()
+        if user:
+            # Ensure the role is loaded before returning
+            _ = user.role  # This forces the lazy loading within the session
+        return user
 
 # --- MENU ---
 def generarMenu(usuario):
@@ -83,6 +87,7 @@ def generarMenu(usuario):
         st.subheader(":material/dashboard: Dashboard")
         st.page_link("pages/player360.py", label="Player 360", icon=":material/contacts:")
         st.page_link("pages/player_evaluation.py", label="Player Evaluation", icon=":material/description:")
+        st.page_link("pages/rag_chat.py", label="AI Assistant", icon=":material/smart_toy:")
 
         st.subheader(":material/manage_accounts: Administrator")
     

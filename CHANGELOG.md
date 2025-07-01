@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- [RAG System Integration](https://trello.com/c/d8jSzEcU/14-crear-chatbot-agente-ai)
+    - Implemented complete RAG (Retrieval-Augmented Generation) system using OpenAI API for natural language database queries
+    - Configured OpenAI `gpt-4o-mini` model for cost-effective natural language to SQL conversion with context-aware responses
+    - Created comprehensive security framework with SQL injection protection, keyword filtering, and read-only enforcement
+    - Added example queries
+
 ### Changed
 - [Translate README and CONTRIBUTING files](https://trello.com/c/msOmla7L/13-translate-readmemd-to-english)
     - Translated `README.md` file
