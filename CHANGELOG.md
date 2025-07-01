@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- [RAG System Integration](https://trello.com/c/d8jSzEcU/14-crear-chatbot-agente-ai)
+    - Restrict context to only football, professional answers only
+
 ### Added
 - [RAG System Integration](https://trello.com/c/d8jSzEcU/14-crear-chatbot-agente-ai)
     - Implemented complete RAG (Retrieval-Augmented Generation) system using OpenAI API for natural language database queries
