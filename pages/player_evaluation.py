@@ -15,7 +15,7 @@ st.header("Players Evaluation", divider=True)
 
 # Rayner colours
 BRAND_COLORS =util.get_brand_colors_list()
-
+primary, secondary, tertiary = BRAND_COLORS[0], BRAND_COLORS[1], BRAND_COLORS[2]
 # ---------------------------------------------------------------------------------
 # Inicializadción de flags en session_state para controlar progreso de evaluación.
 if "completed_tabs" not in st.session_state:
@@ -252,7 +252,7 @@ def show_filters():
     program_labels = [""] + [p.name for p in programs]
     coach_map   = {name:  c.user_id for name,  c in zip(coach_labels, coaches)}
     program_map = {p.name: p.id      for p in programs}
-    #Sidebar: un único form para todos los filtros
+    #Cambio a único form para todos los filtros.
     with st.form("filters_form"):
         selected_player_idx = st.selectbox(
             "Player",
