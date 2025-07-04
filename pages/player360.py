@@ -8,6 +8,8 @@ from utils.pdf_generator import generate_player_report
 import random
 import plotly.graph_objects as go
 from utils import util
+from utils.util import get_current_user
+
 
 util.setup_page("Player 360")
 
@@ -94,9 +96,25 @@ def show_player_info():
     with Session(engine) as session:
         users = session.query(Users).filter(Users.role_id == 4).order_by(Users.last_name).all()
         user_options = [f"{u.first_name} {u.last_name}" for u in users]
-        selected_name = st.selectbox("Select Player for Analysis", user_options, help="Choose a player to view detailed analytics and performance metrics")
-        selected_user = next(u for u in users if f"{u.first_name} {u.last_name}" == selected_name)
+        current_user = get_current_user(session)
+
+        #  SOLO muestra selectbox si NO es jugador
+        if current_user.role_id != 4:
+            users = session.query(Users).filter(Users.role_id == 4).order_by(Users.last_name).all()
+            user_options = [f"{u.first_name} {u.last_name}" for u in users]
+            selected_name = st.selectbox(
+                "Select Player for Analysis",
+                user_options,
+                help="Choose a player to view detailed analytics and performance metrics",
+                key="select_player_360"
+            )
+            selected_user = next(u for u in users if f"{u.first_name} {u.last_name}" == selected_name)
+        else:
+            # Jugador: solo ve su propia información, sin selectbox
+            selected_user = current_user
+
         player = selected_user.players[0] if selected_user.players else None
+        # fin logica
 
         st.divider()
 
