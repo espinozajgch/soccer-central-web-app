@@ -339,7 +339,7 @@ class PlayerAssessments(Base):
     assessment_id: Mapped[int] = mapped_column(Integer, primary_key=True, comment='ID único de la evaluación')
     player_id: Mapped[int] = mapped_column(Integer, nullable=False, comment='Jugador evaluado')
     coach_id: Mapped[int] = mapped_column(Integer, nullable=False, comment='Entrenador que realiza la evaluación')
-    category: Mapped[str] = mapped_column(String(50), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), nullable=False) 
     core_value_id: Mapped[Optional[int]] = mapped_column(Integer, comment='Valor fundamental asociado')
     program_id: Mapped[Optional[int]] = mapped_column(Integer, comment='Programa relacionado con la evaluación')
     item: Mapped[str] = mapped_column(String(255), nullable=False, comment='Ítem o aspecto evaluado')

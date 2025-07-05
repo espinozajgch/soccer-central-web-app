@@ -17,7 +17,7 @@ st.header("Players Evaluation", divider=True)
 BRAND_COLORS =util.get_brand_colors_list()
 
 # ---------------------------------------------------------------------------------
-# Inicializadción de flags en session_state para controlar progreso de evaluación.
+# Init flags & sesion state.
 if "completed_tabs" not in st.session_state:
     st.session_state.completed_tabs = set()
 
