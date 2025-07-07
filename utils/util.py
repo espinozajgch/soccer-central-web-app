@@ -1,4 +1,6 @@
 import streamlit as st
+from sqlalchemy.orm import Session
+from db.models import Users
 
 # Cambiamos setup; 
 # 1. Separamos el login de la carga de la app
@@ -20,3 +22,9 @@ def login_if_needed():
 
 def get_brand_colors_list():
     return ['#d4bc64', '#84ccb4', '#5c74b4', '#6c6c84', '#504f8f', '#83c3d4', '#646c84', '#646c7c', '#588898', '#586c9c']
+
+def get_current_user(session: Session):
+    email = st.session_state.get("usuario")
+    if not email:
+        return None
+    return session.query(Users).filter(Users.email == email).first()
