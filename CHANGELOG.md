@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- [Player 360](https://trello.com/c/iBs8Op2G/11-mejorar-layout-visual-en-player-360)
+    - Added role-based access control to ensure players can only view their own Player 360 dashboard by request of Iban
+
+### Changed
+- [Player 360](https://trello.com/c/iBs8Op2G/11-mejorar-layout-visual-en-player-360)
+    - Displayed player's team history using real `player_teams` and `teams` tables with team name lookup
+    - Removed body fat percentage from the Player 360 tab view by request of Iban
+
+### Changed
+- [Player Reports](https://trello.com/c/B31cOv3q/12-mejorar-reporte-en-el-360)
+    - Removed mock data from the PDF report (e.g., fake "coach assessment" and placeholder text)
+
+
 ### Changed
 - [RAG System Integration](https://trello.com/c/d8jSzEcU/14-crear-chatbot-agente-ai)
     - Restrict context to only football, professional answers only

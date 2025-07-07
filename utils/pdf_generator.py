@@ -33,13 +33,13 @@ ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 
 # Colors - Professional Soccer Theme
 PRIMARY_COLOR = "#1E8449"  # Forest Green
-SECONDARY_COLOR = "#1A365D"  # Deep Navy
+SECONDARY_COLOR = "#1A365D"  #  Navy
 ACCENT_COLOR = "#FFD700"  # Gold
 BACKGROUND_COLOR = "#F5F9F6"
 TEXT_COLOR = "#333333"
 GRID_COLOR = "#DDDDDD"
 HIGHLIGHT_COLOR = "#E74C3C"  # Red accent
-SUCCESS_COLOR = "#2ECC71"  # Bright green
+SUCCESS_COLOR = "#87CEFA"  # Bright green
 WARNING_COLOR = "#F39C12"  # Amber
 
 # Create a custom radar chart projection
@@ -660,16 +660,13 @@ class PlayerReportPDF(FPDF):
         self.set_xy(15, y_left)
         self.field_value("Height", f"{player_data['height']} cm", 40, 45)
 
-        self.set_xy(15, y_left + 8)
-        self.field_value("Education", player_data.get('education_level', 'High School'), 40, 45)
-
         self.set_xy(15, y_left + 16)
         self.field_value("School", player_data.get('school_name', 'Soccer Central SA'), 40, 45)
 
         # Columna derecha
         y_right = y_left
         self.set_xy(110, y_right)
-        last_team = player_data.get('last_team', 'Soccer Central SA')
+        last_team = player_data.get('last_team') or "Not Available"
         self.field_value("Current Team", last_team, 40, 45)
 
         self.set_xy(110, y_right + 8)
@@ -677,7 +674,8 @@ class PlayerReportPDF(FPDF):
         self.field_value("Graduation", grad_date, 40, 45)
 
         self.set_xy(110, y_right + 16)
-        self.field_value("Training", player_data.get('training_location', 'Main Field'), 40, 45)
+        training = player_data.get('training_location') or "Not Available"
+        self.field_value("Training", training, 40, 45)
 
         # Espacio extra antes de la siguiente sección
         self.set_y(y_right + 24)
@@ -778,109 +776,6 @@ class PlayerReportPDF(FPDF):
         self.ln(padding_bottom)
     
     def add_coach_assessment(self):
-        """Add a professional coach assessment section with fixed layout issues"""
-        self.chapter_title("COACH ASSESSMENT")
-        
-        # Store initial Y position
-        initial_y = self.get_y()
-        
-        # STRENGTHS section
-        self.section_title("STRENGTHS")
-        strengths_y = self.get_y()
-        
-        # Create strengths box with fixed height
-        self.set_fill_color(240, 249, 246)
-        self.set_draw_color(30, 132, 73)
-        self.set_line_width(0.3)
-        self.rounded_rect(10, strengths_y, 190, 40, 3, 'FD')
-        
-        # Add strength boxes at the same height
-        for i in range(3):
-            self.set_fill_color(30, 132, 73)
-            self.set_draw_color(26, 54, 93)
-            self.rounded_rect(15 + (i*65), strengths_y + 5, 55, 25, 2, 'FD')
-            
-            self.set_font('Arial', 'B', 9)
-            self.set_text_color(255, 255, 255)
-            strengths = ["Ball Control", "Physical Presence", "Game Vision"]
-            self.set_xy(15 + (i*65), strengths_y + 7)
-            self.cell(55, 5, strengths[i], 0, 1, 'C')
-            
-            self.set_font('Arial', '', 7)
-            descriptions = [
-                "Excellent dribbling and\nfirst touch skills",
-                "Strong in physical duels\nand holding the ball",
-                "Great passing and field\nawareness"
-            ]
-            self.set_xy(15 + (i*65), self.get_y())
-            self.multi_cell(55, 3, descriptions[i], 0, 'C')
-        
-        # Reset Y position for AREAS FOR IMPROVEMENT
-        self.set_y(strengths_y + 50)
-        
-        # AREAS FOR IMPROVEMENT section
-        self.section_title("AREAS FOR IMPROVEMENT")
-        improvement_y = self.get_y()
-        
-        # Create improvement box with same height as strengths
-        self.set_fill_color(252, 243, 240)
-        self.set_draw_color(231, 76, 60)
-        self.set_line_width(0.3)
-        self.rounded_rect(10, improvement_y, 190, 40, 3, 'FD')
-        
-        # Add improvement boxes at the same height
-        for i in range(3):
-            self.set_fill_color(231, 76, 60)
-            self.set_draw_color(26, 54, 93)
-            self.rounded_rect(15 + (i*65), improvement_y + 5, 55, 25, 2, 'FD')
-            
-            self.set_font('Arial', 'B', 9)
-            self.set_text_color(255, 255, 255)
-            improvements = ["Defensive Positioning", "Weaker Foot", "Decision Speed"]
-            self.set_xy(15 + (i*65), improvement_y + 7)
-            self.cell(55, 5, improvements[i], 0, 1, 'C')
-            
-            self.set_font('Arial', '', 7)
-            descriptions = [
-                "Needs to track back\nbetter when team loses\npossession",
-                "Right foot finishing\nneeds improvement for\nversatility",
-                "Sometimes holds ball\ntoo long before making\npasses"
-            ]
-            self.set_xy(15 + (i*65), self.get_y())
-            self.multi_cell(55, 3, descriptions[i], 0, 'C')
-        
-        # Development Plan section with increased height
-        self.ln(45)
-        self.section_title("DEVELOPMENT PLAN")
-        
-        # Create a larger development box
-        self.set_fill_color(240, 248, 255)
-        self.set_draw_color(26, 54, 93)
-        self.set_line_width(0.3)
-        self.rounded_rect(10, self.get_y(), 190, 90, 3, 'FD')  # Increased height
-        
-        # Short-term objectives
-        self.set_font('Arial', 'B', 10)
-        self.set_text_color(26, 54, 93)
-        self.set_xy(15, self.get_y() + 5)
-        self.cell(180, 5, "SHORT-TERM OBJECTIVES:", 0, 1, 'L')
-        
-        self.set_font('Arial', '', 9)
-        self.set_text_color(0, 0, 0)
-        self.set_xy(20, self.get_y() + 2)
-        self.multi_cell(175, 4, "* Focus on defensive positioning drills and tracking exercises\n* Schedule additional technical sessions to improve weaker foot\n* Work with the team on tactical sessions to enhance decision-making speed", 0, 'L')
-        
-        # Long-term development in the same box
-        self.set_font('Arial', 'B', 10)
-        self.set_text_color(26, 54, 93)
-        self.set_xy(15, self.get_y() + 5)
-        self.cell(180, 5, "LONG-TERM DEVELOPMENT:", 0, 1, 'L')
-        
-        self.set_font('Arial', '', 9)
-        self.set_text_color(0, 0, 0)
-        self.set_xy(20, self.get_y() + 2)
-        self.multi_cell(175, 4, "* Implement structured fitness program to maintain peak physical condition\n* Develop leadership qualities through captaincy opportunities\n* Integrate video analysis sessions to improve tactical understanding", 0, 'L')
-        
         self.ln(60)
         
         # Coaching signature section
@@ -897,10 +792,39 @@ class PlayerReportPDF(FPDF):
         self.set_xy(15, self.get_y() + 5)
         self.cell(180, 8, "Signature: _________________________________________________", 0, 1, 'L')
         
+    def add_player_teams(self, player_teams_df):
+        if player_teams_df is None or player_teams_df.empty:
+            return
 
+        self.section_title("TEAM HISTORY")
+        self.set_fill_color(245, 249, 246)
+
+        y_start = self.get_y()
+        box_height = 10 + len(player_teams_df) * 8
+        self.rounded_rect(10, y_start, 190, box_height + 70, 3, 'F')
+
+        self.set_xy(15, y_start + 5)
+        self.set_font('Arial', 'B', 10)
+        self.set_text_color(26, 54, 93)
+        self.cell(80, 8, "Team", 0, 0, 'L')
+        self.cell(45, 8, "From", 0, 0, 'L')
+        self.cell(45, 8, "To", 0, 1, 'L')
+
+        self.set_font('Arial', '', 9)
+        self.set_text_color(0, 0, 0)
+        for _, row in player_teams_df.iterrows():
+            self.set_x(15)
+            self.cell(80, 8, row.get("team_name", "N/A"), 0, 0, 'L')
+            self.cell(45, 8, str(row.get("start_date", "N/A")), 0, 0, 'L')
+            self.cell(45, 8, str(row.get("end_date", "N/A")), 0, 1, 'L')
+            self.cell(45, 8, str(), 0, 1, 'L')
+        self.set_y(y_start + 80)
+  
+
+        self.ln(4)
 
 def generate_player_report(player_data, player_teams, player_games, player_metrics, 
-                          player_evaluations, player_videos, player_documents):
+                          player_evaluations, player_videos, player_documents, teams_df):
     """Generate a PDF report for a player"""
     
     pdf = PlayerReportPDF()
@@ -912,6 +836,12 @@ def generate_player_report(player_data, player_teams, player_games, player_metri
     pdf.add_page()
     pdf.add_player_header(player_data)
     pdf.add_player_profile(player_data)
+    # necesario para mostrar el nombre del equipo
+    if player_teams is not None and not player_teams.empty and teams_df is not None and not teams_df.empty:
+        teams_df = teams_df.rename(columns={"name": "team_name"})  
+        player_teams = player_teams.merge(teams_df[["team_id", "team_name"]], on="team_id", how="left")
+    pdf.add_player_teams(player_teams)
+
     pdf.add_player_position_field(player_data['primary_position'])
     
     if player_evaluations is not None and not player_evaluations.empty:

@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sqlalchemy.orm import Session
-from db.models import Users, PlayerTeams, Metrics, PlayerEvaluations
+from db.models import Users, PlayerTeams, Metrics, PlayerEvaluations, Teams
 from db.db import engine 
 from datetime import datetime
 from utils.pdf_generator import generate_player_report
@@ -128,7 +128,10 @@ def show_player_info():
             session.query(PlayerEvaluations).filter_by(player_id=player.player_id).statement,
             session.bind
         )
-        
+        teams_df = pd.read_sql(
+            session.query(Teams).statement,
+             session.bind
+        )
         # fin logica
 
         st.divider()
@@ -168,7 +171,7 @@ def show_player_info():
             height = getattr(player, "height", None)
             weight = getattr(player, "weight", None)
             with col_a:
-                st.metric("Height (cm)", f"{height:.2f}" if height else "Not Available", delta=f"{height:.2f}" if height else None)
+                st.metric("Height (m)", f"{float(player.height) / 100:.2f}" if height else "Not Available", delta=f"{height:.2f}" if height else None)
             with col_b:
                 st.metric("Weight (kg)", f"{weight:.2f}" if weight else "Not Available", delta=f"{weight:.2f}" if weight else None)
 
@@ -292,7 +295,7 @@ def show_player_info():
                     ("Primary Position", getattr(player, "primary_position", "Not specified") if player else "Not specified"),
                     ("Secondary Position", getattr(player, "secondary_position", "Not specified") if player else "Not specified"),
                     ("Dominant Foot", getattr(player, "dominant_foot", "Not specified") if player else "Not specified"),
-                    ("Height", f"{getattr(player, 'height', 'Not specified')} cm" if player and getattr(player, 'height') else "Not specified"),
+                    ("Height", f"{float(player.height) / 100:.2f} m / {float(player.height) * 0.393701:.1f} in" if player and player.height else "Not specified"),
                     ("Training Location", getattr(player, "training_location", "Not specified") if player else "Not specified")
                 ]
                 
@@ -436,7 +439,8 @@ def show_player_info():
                                         player_metrics=player_metrics_df,
                                         player_evaluations=player_evaluations_df,
                                         player_videos=pd.DataFrame(),  # pendiente
-                                        player_documents=pd.DataFrame()  # pendiente
+                                        player_documents=pd.DataFrame(),  # pendiente
+                                        teams_df=teams_df # para el nombre del equipo en el pdf, no es lo mismo que player_teams
                                     )
                             
                             st.success("Report generated successfully!")
