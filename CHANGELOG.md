@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- [Enhance player‐evaluation UI and process flow.](https://trello.com/c/mUnuSPrA)
+- Refine the presentation and selection of player evaluation parameters.
+- Add process‐flow controls with marks to guide the evaluator and ensure they complete the evaluation.
+- Log past evaluations, with the ability to edit or delete the most recent entry.
+- Update "category" type class PlayerAssessments in models.py to support saving records to the database.
+   
+### Added
 - [Player 360](https://trello.com/c/iBs8Op2G/11-mejorar-layout-visual-en-player-360)
     - Added role-based access control to ensure players can only view their own Player 360 dashboard by request of Iban
 
