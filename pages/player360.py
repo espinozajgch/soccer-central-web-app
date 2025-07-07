@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sqlalchemy.orm import Session
-from db.models import Users
+from db.models import Users, PlayerTeams, Metrics, PlayerEvaluations
 from db.db import engine 
 from datetime import datetime
 from utils.pdf_generator import generate_player_report
@@ -114,6 +114,21 @@ def show_player_info():
             selected_user = current_user
 
         player = selected_user.players[0] if selected_user.players else None
+
+        # Cargar datos para el pdf
+        player_teams_df = pd.read_sql(
+            session.query(PlayerTeams).filter_by(player_id=player.player_id).statement,
+            session.bind
+        )
+        player_metrics_df = pd.read_sql(
+            session.query(Metrics).filter_by(player_id=player.player_id).statement,
+            session.bind
+        )
+        player_evaluations_df = pd.read_sql(
+            session.query(PlayerEvaluations).filter_by(player_id=player.player_id).statement,
+            session.bind
+        )
+        
         # fin logica
 
         st.divider()
@@ -152,24 +167,10 @@ def show_player_info():
             col_a, col_b, col_c = st.columns(3)
             height = getattr(player, "height", None)
             weight = getattr(player, "weight", None)
-            fat = getattr(player, "body_fat_percentage", None)
-            date = getattr(player, "last_measurement_date", None)
             with col_a:
                 st.metric("Height (cm)", f"{height:.2f}" if height else "Not Available", delta=f"{height:.2f}" if height else None)
             with col_b:
                 st.metric("Weight (kg)", f"{weight:.2f}" if weight else "Not Available", delta=f"{weight:.2f}" if weight else None)
-            with col_c:
-                st.metric("Body Fat (%)", f"{fat:.2f}" if fat else "Not Available")
-            st.markdown(f"**Last Measurement Date:** {date.strftime('%d/%m/%Y') if date else 'Not Available'}")
-            if fat is not None:
-                if fat <= 14:
-                    st.success("Body fat level is in the ideal range for high-performance athletes.")
-                elif fat <= 18:
-                    st.warning("Body fat level is acceptable, but could be improved.")
-                else:
-                    st.error("Body fat level is above the recommended range.")
-            else:
-                st.info("No body fat data available.")
 
         with analytics_tab2:
             st.subheader("Player Metrics")
@@ -251,6 +252,37 @@ def show_player_info():
                     with col_b:
                         st.info(value)
                         
+                st.subheader("Teams")
+
+                if player and player.player_teams:
+                    for t in player.player_teams:
+                        team_name = t.team.name if t.team and t.team.name else "Unknown"
+                        start = t.start_date.strftime('%d/%m/%Y') if t.start_date else "N/A"
+                        end = t.end_date.strftime('%d/%m/%Y') if t.end_date else "Present"
+
+                        col_a, col_b = st.columns([1, 2])
+                        with col_a:
+                            st.write("**Team:**")
+                        with col_b:
+                            st.info(team_name)
+
+                        col_c, col_d = st.columns([1, 2])
+                        with col_c:
+                            st.write("**From:**")
+                        with col_d:
+                            st.success(start)
+
+                        col_e, col_f = st.columns([1, 2])
+                        with col_e:
+                            st.write("**To:**")
+                        with col_f:
+                            st.success(end)
+
+                        st.markdown("---")
+                else:
+                    st.info("No team history available.")
+
+
             with profile_col2:
                 st.subheader("Player Details")
                 
@@ -270,6 +302,8 @@ def show_player_info():
                         st.write(f"**{label}:**")
                     with col_b:
                         st.success(value)
+
+               
         
         with tab2:
             st.subheader("Performance Analytics Dashboard")
@@ -362,6 +396,8 @@ def show_player_info():
             
             notes = getattr(player, "notes", "No additional notes") if player else "No additional notes"
             st.text_area("Additional Notes", notes, disabled=True, height=100)
+
+            
         
         with tab4:
             st.subheader("Reports & Documentation Center")
@@ -394,14 +430,14 @@ def show_player_info():
                             }
                             
                             pdf_bytes = generate_player_report(
-                                player_data=player_data,
-                                player_teams=pd.DataFrame(),
-                                player_games=pd.DataFrame(),
-                                player_metrics=pd.DataFrame(),
-                                player_evaluations=pd.DataFrame(),
-                                player_videos=pd.DataFrame(),
-                                player_documents=pd.DataFrame()
-                            )
+                                        player_data=player_data,
+                                        player_teams=player_teams_df,
+                                        player_games=pd.DataFrame(),  # pendiente
+                                        player_metrics=player_metrics_df,
+                                        player_evaluations=player_evaluations_df,
+                                        player_videos=pd.DataFrame(),  # pendiente
+                                        player_documents=pd.DataFrame()  # pendiente
+                                    )
                             
                             st.success("Report generated successfully!")
                             st.download_button(

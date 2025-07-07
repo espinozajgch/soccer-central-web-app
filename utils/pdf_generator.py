@@ -914,55 +914,75 @@ def generate_player_report(player_data, player_teams, player_games, player_metri
     pdf.add_player_profile(player_data)
     pdf.add_player_position_field(player_data['primary_position'])
     
-    skills_data = {
-        "Technical": np.random.randint(70, 98),
-        "Physical": np.random.randint(70, 98),
-        "Tactical": np.random.randint(70, 98),
-        "Mental": np.random.randint(70, 98),
-        "Attacking": np.random.randint(70, 98),
-        "Defending": np.random.randint(70, 98),
-    }
-    
-    pdf.add_player_skills_radar(skills_data)
+    if player_evaluations is not None and not player_evaluations.empty:
+        if "value" in player_evaluations.columns:
+            player_evaluations["value"] = pd.to_numeric(player_evaluations["value"], errors="coerce")
+
+            radar_data = (
+            player_evaluations.groupby("category")["value"]
+            .mean(numeric_only=True)
+            .dropna()
+            .round(2)
+            .to_dict()
+            )
+            if radar_data:
+                pdf.add_player_skills_radar(radar_data)
+
+
     
     pdf.add_page()
     pdf.chapter_title("PERFORMANCE STATISTICS")
     
-    performance_metrics = {
-        "Games Played": 22,
-        "Goals": 8,
-        "Assists": 6,
-        "Minutes": 1820,
-        "Pass Accuracy": 87,
-        "Tackles": 45
-    }
+    if player_metrics is not None and not player_metrics.empty:
+        performance_metrics = {
+        "Drills": len(player_metrics),
+        "Hits": player_metrics["hits"].sum(),
+        "Misses": player_metrics["misses"].sum(),
+        "Correct": player_metrics["correct"].sum(),
+        "Wrong": player_metrics["wrong"].sum(),
+        "Avg Reaction Time": round(player_metrics["avg_reaction_time"].mean(), 2)
+        }
+        pdf.add_performance_metrics(performance_metrics)
     
-    pdf.add_performance_metrics(performance_metrics)
+    if player_metrics is not None and not player_metrics.empty:
+        # player_id actual
+        current_player_id = player_metrics["player_id"].iloc[0]
+
+        # Calcular métricas del jugador
+        player_stats = player_metrics[player_metrics["player_id"] == current_player_id]
+        for col in ["hits", "misses", "correct", "wrong"]:
+            player_metrics[col] = pd.to_numeric(player_metrics[col], errors="coerce")
+
+        player_stats = player_metrics[player_metrics["player_id"] == current_player_id]
+        league_stats = player_metrics[player_metrics["player_id"] != current_player_id]
+
+        player_comparison = {
+            "Hits": {"player": round(player_stats["hits"].mean(skipna=True), 2)},
+            "Misses": {"player": round(player_stats["misses"].mean(skipna=True), 2)},
+            "Correct": {"player": round(player_stats["correct"].mean(skipna=True), 2)},
+            "Wrong": {"player": round(player_stats["wrong"].mean(skipna=True), 2)}
+        }
+
+        if not league_stats.empty:
+            league_avg = {
+                "Hits": round(league_stats["hits"].mean(skipna=True), 2),
+                "Misses": round(league_stats["misses"].mean(skipna=True), 2),
+                "Correct": round(league_stats["correct"].mean(skipna=True), 2),
+                "Wrong": round(league_stats["wrong"].mean(skipna=True), 2)
+            }
+        else:
+            league_avg = {k: 0 for k in ["Hits", "Misses", "Correct", "Wrong"]}
+
+        pdf.add_stats_comparison(player_comparison, league_avg)
+
     
-    player_comparison = {
-        "Goals per 90 min": {"player": 0.4},
-        "Passing Accuracy %": {"player": 87},
-        "Tackles per Game": {"player": 2.1},
-        "Distance Covered (km)": {"player": 10.3},
-        "Successful Dribbles": {"player": 3.2}
-    }
-    
-    league_average = {
-        "Goals per 90 min": 0.2,
-        "Passing Accuracy %": 82,
-        "Tackles per Game": 1.8,
-        "Distance Covered (km)": 9.8,
-        "Successful Dribbles": 2.1
-    }
-    
-    pdf.add_stats_comparison(player_comparison, league_average)
-    
-    months = ["Jan", "Feb", "Mar", "Apr", "May"]
-    performance_values = [65, 70, 68, 75, 82]
-    
-    progress_fig = create_progress_chart(months, performance_values, 
-                                        "Performance Progress", "Performance Rating")
-    pdf.add_plot(progress_fig)
+    if player_metrics is not None and not player_metrics.empty:
+        player_metrics["training_date"] = pd.to_datetime(player_metrics["training_date"], errors="coerce")
+        dates = player_metrics["training_date"].dt.strftime("%Y-%m-%d").tolist()
+        values = player_metrics["avg_reaction_time"].tolist()
+        progress_fig = create_progress_chart(dates, values, "Reaction Time Progress", "Seconds")
+        pdf.add_plot(progress_fig)
+
     
     pdf.add_page()
     pdf.add_coach_assessment()
