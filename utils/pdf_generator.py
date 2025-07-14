@@ -9,6 +9,13 @@ import requests
 import os
 
 
+class CustomPDF(FPDF):
+    def header(self):
+        # fondo azul oscuro
+        self.set_fill_color(10, 15, 61)
+        self.rect(0, 0, 210, 297, 'F')
+        self.set_text_color(255, 255, 255)
+
 def generate_styled_radar_chart(data_dict):
     labels = list(data_dict.keys())
     values = list(data_dict.values())
@@ -32,43 +39,57 @@ def generate_styled_radar_chart(data_dict):
     return fig
 
 
-def build_evaluation_table(df):
+# Construir tabla a partir de player_assessments
+
+def build_evaluation_table_from_df(df):
     categories = [
-        "Core Value", "Skills", "Game Model", "Performance",
-        "Mental & Leadership", "Match Performance", "Evolution and Recommendation"
+        "Values", "Skills", "Game Model", "Performance",
+        "Mental & Leadership", "Match Performance", "Evolution"
     ]
-    table_data = {cat: [] for cat in categories}
+    table = {cat: [] for cat in categories}
     for _, row in df.iterrows():
-        for cat in categories:
-            if cat.lower() in row['category'].lower():
-                table_data[cat].append(row['item'])
-                break
-    return table_data
+        cat_key = next((c for c in categories if c.lower() in row['category'].lower()), None)
+        if cat_key:
+            text = f"{row['item']}: {row['value']}"
+            table[cat_key].append(text)
+    return table
+
 
 
 def generate_player_report(player_data, player_teams, player_games, player_metrics,
-                           player_evaluations, player_videos, player_documents, teams_df):
-    pdf = FPDF()
+                           player_evaluations, player_videos, player_documents, teams_df, player_assessments):
+
+    pdf = CustomPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=10)
-    pdf.set_fill_color(10, 15, 61)
-    pdf.rect(0, 0, 210, 297, 'F')
-
     pdf.set_text_color(255, 255, 255)
 
     # Foto del jugador
     photo_url = player_data.get("photo_url") or "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+
     if photo_url:
         try:
-            response = requests.get(photo_url, stream=True)
-            if response.status_code == 200:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as img_tmp:
+            response = requests.get(photo_url, stream=True, timeout=10)
+            content_type = response.headers.get('Content-Type', '')
+            print(f"DEBUG: status={response.status_code}, content-type={content_type}")
+
+            if response.status_code == 200 and 'image' in content_type:
+                ext = ".jpg" if "jpeg" in content_type else ".png"
+                with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as img_tmp:
                     img_tmp.write(response.content)
+                    img_tmp.flush()
                     img_path = img_tmp.name
+
+                # Insertar imagen en el PDF
                 pdf.image(img_path, x=15, y=15, w=30, h=30)
+
+                # Eliminar archivo temporal
                 os.remove(img_path)
-        except:
-            pass
+            else:
+                print(f"WARNING: Failed to fetch image or invalid content type. Status: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR loading photo: {e}")
+
 
     # Datos debajo de la foto
     y_info = 50
@@ -109,35 +130,42 @@ def generate_player_report(player_data, player_teams, player_games, player_metri
         pdf.set_x(145)
         pdf.cell(40, 8, f"> {label}", ln=1)
 
-    # Tabla de evaluaciones al final
+    # === Pintar tabla de evaluaciones horizontal ===
     pdf.set_y(120)
-    table_data = build_evaluation_table(player_evaluations)
-    col_titles = ["Values", "Skills", "Game Model", "Performance", "Mental & Leadership", "Evolution"]
-    col_width = 34
-    row_height = 12
-    header_height = 16
+    table_data = build_evaluation_table_from_df(player_assessments)
 
+    col_titles = ["Values", "Skills", "Game Model", "Performance", "Mental & Leadership", "Evolution"]
+    col_width = 35
+    row_height = 12
+
+    # Estilo cabecera
     pdf.set_font("Arial", "B", 9)
     pdf.set_fill_color(185, 49, 96)
-    x_start = pdf.get_x()
-    y_start = pdf.get_y()
+    pdf.set_text_color(255, 255, 255)
 
+    # Cabeceras
+    table_margin = (210 - (col_width * len(col_titles))) / 2  # centrar
+    pdf.set_x(table_margin)
     for title in col_titles:
-        pdf.set_xy(x_start, y_start)
-        pdf.multi_cell(col_width, header_height / 2, title, border=1, align="C", fill=True)
-        x_start += col_width
+        pdf.cell(col_width, row_height, title, border=1, align="C", fill=True)
+    pdf.ln(row_height)
 
-    pdf.set_y(y_start + header_height)
-
-    max_rows = max(len(table_data.get(cat, [])) for cat in table_data)
+    # Cuerpo de la tabla
     pdf.set_font("Arial", "", 8)
     pdf.set_fill_color(115, 0, 36)
+
+    # Calcular máximo número de filas
+    max_rows = max(len(table_data.get(col, [])) for col in col_titles)
+    
     for i in range(max_rows):
-        for cat_key in ["Core Value", "Skills", "Game Model", "Performance", "Mental & Leadership", "Evolution and Recommendation"]:
-            items = table_data.get(cat_key, [])
-            text = f"{items[i]}" if i < len(items) else ""
-            pdf.multi_cell(col_width, row_height, text[:30], border=1, fill=True, align="L")
-        pdf.set_y(pdf.get_y() + row_height)
+        pdf.set_x(table_margin)
+        for col in col_titles:
+            items = table_data.get(col, [])
+            text = items[i] if i < len(items) else ""
+            # Cortar si es muy largo
+            text = text[:40] + "..." if len(text) > 43 else text
+            pdf.cell(col_width, row_height, text, border=1, fill=True)
+        pdf.ln(row_height)
 
     pdf_bytes = pdf.output(dest='S').encode('latin1')
     return BytesIO(pdf_bytes)

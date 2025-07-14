@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+ - New PDF design based on Soccer Central requeriments
+ - PDF: build table with player evaluation values per player (new query to player_assessments)
+  
+### Added
 - [Enhance player‐evaluation UI and process flow.](https://trello.com/c/mUnuSPrA)
 - Refine the presentation and selection of player evaluation parameters.
 - Add process‐flow controls with marks to guide the evaluator and ensure they complete the evaluation.

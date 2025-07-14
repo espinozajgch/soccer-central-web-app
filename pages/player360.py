@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from db.models import Users, PlayerTeams, Metrics, PlayerEvaluations, Teams
 from db.db import engine 
 from datetime import datetime
@@ -418,6 +419,7 @@ def show_player_info():
                             player_data = {
                                 "first_name": selected_user.first_name,
                                 "last_name": selected_user.last_name,
+                                "player_id": getattr(player, "player_id", "N/A") if player else "N/A",
                                 "birth_date": selected_user.birth_date,
                                 "nationality": getattr(player, "nationality", selected_user.country) if player else selected_user.country,
                                 "primary_position": getattr(player, "primary_position", "Not specified") if player else "Not specified",
@@ -431,6 +433,15 @@ def show_player_info():
                                 "notes": getattr(player, "notes", "") if player else "",
                                 "player_activity_history": getattr(player, "player_activity_history", "") if player else ""
                             }
+
+                            # Obtenemos los datos para la tabla del pdf
+
+                            player_assessment_query = text("""
+                            SELECT category, item, value 
+                            FROM player_assessments 
+                            WHERE player_id = :player_id
+                            """)
+                            player_assessment_df = pd.read_sql(player_assessment_query, session.bind, params={"player_id": player.player_id})
                             
                             pdf_bytes = generate_player_report(
                                         player_data=player_data,
@@ -440,7 +451,8 @@ def show_player_info():
                                         player_evaluations=player_evaluations_df,
                                         player_videos=pd.DataFrame(),  # pendiente
                                         player_documents=pd.DataFrame(),  # pendiente
-                                        teams_df=teams_df # para el nombre del equipo en el pdf, no es lo mismo que player_teams
+                                        teams_df=teams_df, # para el nombre del equipo en el pdf, no es lo mismo que player_teams
+                                        player_assessments=player_assessment_df # para la tabla del pdf
                                     )
                             
                             st.success("Report generated successfully!")
