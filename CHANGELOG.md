@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
- - New PDF design based on Soccer Central requeriments
+ - [New PDF design based on Soccer Central requeriments](https://trello.com/c/B31cOv3q/12-mejorar-reporte-en-el-360)
  - PDF: build table with player evaluation values per player (new query to player_assessments)
   
 ### Added
