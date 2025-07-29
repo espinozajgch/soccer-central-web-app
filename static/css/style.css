@@ -16,6 +16,78 @@ header.site-header, footer.site-footer {
     padding: 1rem 0;
 }
 
+/* Header Layout */
+.site-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    height: 50px;
+    width: auto;
+    max-width: 200px;
+}
+
+.site-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #f2f2f2;
+}
+
+.main-nav {
+    display: flex;
+    gap: 2rem;
+}
+
+.main-nav a {
+    color: #f2f2f2;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.main-nav a:hover {
+    color: #fcb900;
+}
+
+/* Hamburger Menu Styles */
+.hamburger-menu {
+    display: none;
+    flex-direction: column;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    gap: 4px;
+    z-index: 1000;
+}
+
+.hamburger-menu span {
+    width: 25px;
+    height: 3px;
+    background-color: #f2f2f2;
+    border-radius: 2px;
+}
+
+.hamburger-menu.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger-menu.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-menu.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -166,12 +238,88 @@ header.site-header, footer.site-footer {
     cursor: pointer;
 }
 
-.features-grid {
+/* Pagination Styles */
+.pagination {
     display: flex;
-    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
     gap: 1rem;
-    justify-content: space-between;
     margin-top: 2rem;
+    padding: 1rem;
+    background: #1e1e1e;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.pagination-btn {
+    background-color: #2b2b2b;
+    color: #f2f2f2;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #fcb900;
+    color: #1a1a1a;
+    border-color: #fcb900;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    color: #ccc;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.feature {
+    background: #1e1e1e;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+.feature i {
+    font-size: 3rem;
+    color: #fcb900;
+    margin-bottom: 1rem;
+}
+
+.feature h4 {
+    color: #f2f2f2;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.feature p {
+    color: #ccc;
+    line-height: 1.6;
+    margin: 0;
 }
 
 /* Player Details Page Styles */
@@ -273,9 +421,10 @@ header.site-header, footer.site-footer {
 
 .player-meta {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     margin-bottom: 1.5rem;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .position-badge, .nationality-badge, .age-badge {
@@ -380,6 +529,66 @@ header.site-header, footer.site-footer {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    /* Header responsive styles */
+    .site-header .container {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+    }
+    
+    .logo-section {
+        flex-direction: row;
+        gap: 1rem;
+    }
+    
+    .logo {
+        height: 40px;
+        max-width: 150px;
+    }
+    
+    .site-title {
+        font-size: 1.2rem;
+    }
+    
+    /* Show hamburger menu */
+    .hamburger-menu {
+        display: flex;
+    }
+    
+    /* Hide navigation by default */
+    .main-nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: #1a1a1a;
+        flex-direction: column;
+        gap: 0;
+        padding: 1rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-100%);
+        opacity: 0;
+        visibility: hidden;
+        z-index: 999;
+    }
+    
+    .main-nav.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .main-nav a {
+        padding: 1rem 2rem;
+        border-bottom: 1px solid #333;
+        text-align: center;
+    }
+    
+    .main-nav a:last-child {
+        border-bottom: none;
+    }
+    
     .search-box {
         max-width: 100%;
         margin: 0 auto 1rem;
@@ -403,6 +612,17 @@ header.site-header, footer.site-footer {
         gap: 1.5rem;
     }
     
+    .pagination {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1.5rem;
+    }
+    
+    .pagination-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+    
     .player-photo {
         height: 180px;
     }
@@ -424,6 +644,7 @@ header.site-header, footer.site-footer {
     
     .player-meta {
         justify-content: center;
+        gap: 0.5rem;
     }
     
     .player-stats-summary {
@@ -446,6 +667,26 @@ header.site-header, footer.site-footer {
 }
 
 @media (max-width: 480px) {
+    /* Header responsive styles for small screens */
+    .logo {
+        height: 35px;
+        max-width: 120px;
+    }
+    
+    .site-title {
+        font-size: 1rem;
+    }
+    
+    .hamburger-menu span {
+        width: 20px;
+        height: 2px;
+    }
+    
+    .main-nav a {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
     .search-input {
         padding: 0.75rem 2.25rem 0.75rem 2.25rem;
         font-size: 0.85rem;
@@ -468,6 +709,20 @@ header.site-header, footer.site-footer {
         gap: 1rem;
     }
     
+    .pagination {
+        padding: 1rem;
+        gap: 0.5rem;
+    }
+    
+    .pagination-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+    
+    .pagination-info {
+        font-size: 0.8rem;
+    }
+    
     .player-photo {
         height: 160px;
     }
@@ -481,12 +736,30 @@ header.site-header, footer.site-footer {
     }
     
     .player-meta {
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .player-stats-summary {
+        flex-direction: row;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 320px) {
+    .player-meta {
         flex-direction: column;
         align-items: center;
+        gap: 0.5rem;
     }
     
     .player-stats-summary {
         flex-direction: column;
+        align-items: center;
         gap: 1rem;
     }
 }

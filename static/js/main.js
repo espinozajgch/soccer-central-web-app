@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Navbar 
+    
+    
+    // Navbar
     const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
     navLinks.forEach(link => {
         link.addEventListener('click', function (e) {
@@ -22,24 +24,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Global variables for search functionality
+    // Global variables for search functionality and pagination
     let allPlayers = [];
     let filteredPlayers = [];
+    let currentPage = 1;
+    const playersPerPage = 12;
+    
+    // Load saved search term from localStorage (global scope)
+    const savedSearchTerm = localStorage.getItem('playerSearchTerm') || '';
 
     // Search functionality
     const searchInput = document.getElementById('player-search');
     const clearSearchBtn = document.getElementById('clear-search');
     const searchResultsCount = document.getElementById('search-results-count');
 
-    // Load saved search term from localStorage
-    const savedSearchTerm = localStorage.getItem('playerSearchTerm') || '';
-    if (savedSearchTerm) {
-        searchInput.value = savedSearchTerm;
-        clearSearchBtn.style.display = 'block';
-    }
+    // Only add search functionality if elements exist (main page)
+    if (searchInput && clearSearchBtn && searchResultsCount) {
+        // Set saved search term if exists
+        if (savedSearchTerm) {
+            searchInput.value = savedSearchTerm;
+            clearSearchBtn.style.display = 'block';
+        }
 
-    // Search input event listener
-    searchInput.addEventListener('input', function() {
+        // Search input event listener
+        searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase().trim();
         
         // Save search term to localStorage
@@ -67,74 +75,88 @@ document.addEventListener('DOMContentLoaded', function () {
         this.style.display = 'none';
     });
 
-    // Filter players function
-    function filterPlayers(searchTerm) {
-        // Show brief loading state for search
-        const container = document.getElementById('players-container');
-        const loadingContainer = document.getElementById('players-loading');
-        
-        container.style.display = 'none';
-        loadingContainer.style.display = 'block';
-        loadingContainer.querySelector('p').textContent = 'Searching players...';
-        
-        // Small delay to show loading state
-        setTimeout(() => {
-            filteredPlayers = allPlayers.filter(player => {
-                const name = (player.displayName || `${player.name || ''} ${player.lastName || ''}`.trim()).toLowerCase();
-                const position = (player.position || '').toLowerCase();
-                const nationality = (player.nationality || '').toLowerCase();
-                
-                return name.includes(searchTerm) || 
-                       position.includes(searchTerm) || 
-                       nationality.includes(searchTerm);
-            });
-            
-            displayPlayers(filteredPlayers);
-            updateSearchResultsInfo(filteredPlayers.length, allPlayers.length);
-        }, 150);
-    }
+            // Filter players function
+        function filterPlayers(searchTerm) {
+            // Show brief loading state for search
+            const container = document.getElementById('players-container');
+            const loadingContainer = document.getElementById('players-loading');
 
-    // Clear search function
-    function clearSearch() {
-        // Reset loading text
-        const loadingContainer = document.getElementById('players-loading');
-        loadingContainer.querySelector('p').textContent = 'Loading players...';
-        
-        filteredPlayers = allPlayers;
-        displayPlayers(allPlayers);
-        updateSearchResultsInfo(allPlayers.length, allPlayers.length);
-    }
+            container.style.display = 'none';
+            loadingContainer.style.display = 'block';
+            loadingContainer.querySelector('p').textContent = 'Searching players...';
 
-    // Update search results info
-    function updateSearchResultsInfo(filteredCount, totalCount) {
-        if (filteredCount === totalCount) {
-            searchResultsCount.textContent = `Showing all ${totalCount} players`;
-        } else {
-            searchResultsCount.textContent = `Showing ${filteredCount} of ${totalCount} players`;
+            // Small delay to show loading state
+            setTimeout(() => {
+                filteredPlayers = allPlayers.filter(player => {
+                    const name = (player.displayName || `${player.name || ''} ${player.lastName || ''}`.trim()).toLowerCase();
+                    const position = (player.position || '').toLowerCase();
+                    const nationality = (player.nationality || '').toLowerCase();
+
+                    return name.includes(searchTerm) ||
+                           position.includes(searchTerm) ||
+                           nationality.includes(searchTerm);
+                });
+
+                currentPage = 1; // Reset to first page when filtering
+                displayPlayers(filteredPlayers);
+                updateSearchResultsInfo(filteredPlayers.length, allPlayers.length);
+            }, 150);
         }
-    }
 
-    // Display players function
+        // Clear search function
+        function clearSearch() {
+            // Reset loading text
+            const loadingContainer = document.getElementById('players-loading');
+            loadingContainer.querySelector('p').textContent = 'Loading players...';
+
+            filteredPlayers = allPlayers;
+            currentPage = 1; // Reset to first page when clearing search
+            displayPlayers(allPlayers);
+            updateSearchResultsInfo(allPlayers.length, allPlayers.length);
+        }
+
+        // Update search results info
+        function updateSearchResultsInfo(filteredCount, totalCount) {
+            const startIndex = (currentPage - 1) * playersPerPage + 1;
+            const endIndex = Math.min(currentPage * playersPerPage, filteredCount);
+            
+            if (filteredCount === totalCount) {
+                searchResultsCount.textContent = `Showing ${startIndex}-${endIndex} of ${totalCount} players`;
+            } else {
+                searchResultsCount.textContent = `Showing ${startIndex}-${endIndex} of ${filteredCount} filtered players (${totalCount} total)`;
+            }
+        }
+    } // Close the if statement for search functionality
+
+    // Display players function with pagination
     function displayPlayers(players) {
         const container = document.getElementById('players-container');
         const loadingContainer = document.getElementById('players-loading');
         const count = document.getElementById('players-count');
 
         // Hide loading, show container
-        loadingContainer.style.display = 'none';
-        container.style.display = 'grid';
+        if (loadingContainer) loadingContainer.style.display = 'none';
+        if (container) container.style.display = 'grid';
 
         if (!players || !players.length) {
-            container.innerHTML = `
-                <div class="no-players">
-                    <p><i class="fas fa-users"></i> No players found</p>
-                </div>`;
+            if (container) {
+                container.innerHTML = `
+                    <div class="no-players">
+                        <p><i class="fas fa-users"></i> No players found</p>
+                    </div>`;
+            }
             return;
         }
 
-        count.textContent = players.length;
+        if (count) count.textContent = players.length;
 
-        const cards = players.map(p => {
+        // Calculate pagination
+        const totalPages = Math.ceil(players.length / playersPerPage);
+        const startIndex = (currentPage - 1) * playersPerPage;
+        const endIndex = startIndex + playersPerPage;
+        const currentPlayers = players.slice(startIndex, endIndex);
+
+        const cards = currentPlayers.map(p => {
             const name = p.displayName || `${p.name || ''} ${p.lastName || ''}`.trim();
             const img =  'https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg?auto=compress&cs=tinysrgb&w=400';
             const pos = p.position || p.role1?.join(', ') || 'N/A';
@@ -157,31 +179,65 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }).join('');
 
+        // Set the player cards in the grid container
         container.innerHTML = cards;
 
-        // Animate cards
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        });
+        // Handle pagination separately - create or update pagination element
+        let paginationContainer = document.getElementById('pagination-container');
+        if (!paginationContainer) {
+            paginationContainer = document.createElement('div');
+            paginationContainer.id = 'pagination-container';
+            container.parentNode.insertBefore(paginationContainer, container.nextSibling);
+        }
 
-        document.querySelectorAll('.player-card, .feature').forEach((el, i) => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = `opacity 0.6s ease ${i * 0.1}s, transform 0.6s ease ${i * 0.1}s`;
-            observer.observe(el);
-        });
+        // Add pagination controls
+        if (totalPages > 1) {
+            paginationContainer.innerHTML = `
+                <div class="pagination">
+                    <button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span class="pagination-info">Page ${currentPage} of ${totalPages}</span>
+                    <button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            `;
+            paginationContainer.style.display = 'block';
+        } else {
+            paginationContainer.style.display = 'none';
+        }
     }
 
-    // Cargar players
-    fetch('/players')
+    // Change page function for pagination (moved inside DOMContentLoaded scope)
+    window.changePage = function(newPage) {
+        const totalPages = Math.ceil(filteredPlayers.length / playersPerPage);
+        
+        if (newPage >= 1 && newPage <= totalPages) {
+            currentPage = newPage;
+            displayPlayers(filteredPlayers);
+            
+            // Update search results info if search elements exist
+            const searchResultsCount = document.getElementById('search-results-count');
+            if (searchResultsCount) {
+                updateSearchResultsInfo(filteredPlayers.length, allPlayers.length);
+            }
+            
+            // Scroll to top of players section
+            const playersSection = document.querySelector('.players-section');
+            if (playersSection) {
+                playersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    };
+
+    // Cargar players - only if we're on the main page
+    const playersContainer = document.getElementById('players-container');
+    const playersLoading = document.getElementById('players-loading');
+    const playerError = document.getElementById('player-error');
+    
+    if (playersContainer && playersLoading) {
+        fetch('/players')
         .then(res => res.json()) // Convierte la respuesta en JSON
         .then(players => { // `players` es un array de objetos jugador
             allPlayers = players;
@@ -203,9 +259,10 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(err => {
             console.error('Error loading players:', err);
-            document.getElementById('players-loading').style.display = 'none';
-            document.getElementById('player-error').style.display = 'block';
+            if (playersLoading) playersLoading.style.display = 'none';
+            if (playerError) playerError.style.display = 'block';
         });
+    }
 });
 
 // Calcular edad con date

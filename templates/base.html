@@ -10,17 +10,33 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.2" />
+    
+    <!-- Hamburger menu styles -->
+    <style>
+        @media (max-width: 768px) {
+            .hamburger-menu {
+                display: flex;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header / Navbar -->
     <header class="site-header">
         <div class="container">
-            <div class="logo-section">
-                <img src="{{ url_for('static', filename='images/soccer-central.png') }}" alt="Soccer Central SA" class="logo" />
-                <span class="site-title">Soccer Central SA</span>
-            </div>
-            <nav class="main-nav">
+                                    <div class="logo-section">
+                            <img src="{{ url_for('static', filename='images/soccer-central.png') }}" alt="Soccer Central SA" class="logo" />
+                        </div>
+            
+            <!-- Hamburger Menu Button -->
+            <button class="hamburger-menu" id="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <nav class="main-nav" id="main-nav">
                 <a href="{{ url_for('index') }}">Home</a>
                 <a href="{{ url_for('get_players_function') }}">API Players</a>
             </nav>
@@ -59,6 +75,38 @@
     </footer>
 
     <!-- JavaScript -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=1.2"></script>
+    
+    <!-- Hamburger menu script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.getElementById('hamburger-menu');
+            const mainNav = document.getElementById('main-nav');
+            
+            if (hamburger && mainNav) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    mainNav.classList.toggle('active');
+                });
+                
+                // Close menu when clicking on a nav link
+                const navLinks = mainNav.querySelectorAll('a');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        hamburger.classList.remove('active');
+                        mainNav.classList.remove('active');
+                    });
+                });
+                
+                // Close menu when clicking outside (without animation)
+                document.addEventListener('click', function(e) {
+                    if (!hamburger.contains(e.target) && !mainNav.contains(e.target)) {
+                        hamburger.classList.remove('active');
+                        mainNav.classList.remove('active');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
