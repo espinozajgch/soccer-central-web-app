@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container hero-content">
+        <div class="hero-text">
+            <h1>Discover the <span class="highlight">Talents</span> of the Future</h1>
+            <p>
+                At Soccer Central SA, we train the most promising young football players,
+                developing their technical and tactical skills to achieve sporting excellence.
+            </p>
+            <div class="hero-stats">
+                <div class="stat-box">
+                    <strong id="players-count">0</strong>
+                    <span>Players Showed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="players-section container">
+    <h2>Our Talents</h2>
+    <p>Meet the young footballers who are making a difference</p>
+
+    <div id="player-error" class="alert-error" style="display:none;">
+        <p><i class="fas fa-exclamation-circle"></i> Error loading players</p>
+    </div>
+
+    <div class="players-grid" id="players-container">
+        <!-- Player cards will be injected here by main.js -->
+    </div>
+</section>
+
+<section class="features-section container">
+    <h2>Why Choose Soccer Central SA?</h2>
+    <div class="features-grid">
+        <div class="feature">
+            <i class="fas fa-trophy"></i>
+            <h4>Sporting Excellence</h4>
+            <p>High-level training with internationally proven methodologies.</p>
+        </div>
+        <div class="feature">
+            <i class="fas fa-users"></i>
+            <h4>Comprehensive Development</h4>
+            <p>Technical, tactical, physical and mental preparation for complete players.</p>
+        </div>
+        <div class="feature">
+            <i class="fas fa-graduation-cap"></i>
+            <h4>Academic Education</h4>
+            <p>Balanced focus between sport and academic growth.</p>
+        </div>
+        <div class="feature">
+            <i class="fas fa-handshake"></i>
+            <h4>Professional Opportunities</h4>
+            <p>Direct connections with professional clubs and international scouts.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

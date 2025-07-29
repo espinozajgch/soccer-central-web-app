@@ -1,0 +1,74 @@
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #121212;
+    color: #f2f2f2;
+}
+
+a {
+    color: #f2f2f2;
+    text-decoration: none;
+}
+
+header.site-header, footer.site-footer {
+    background-color: #1a1a1a;
+    padding: 1rem 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.hero-section {
+    background: linear-gradient(to right, #000000, #222222);
+    padding: 4rem 0;
+    color: #ffffff;
+}
+
+.hero-text .highlight {
+    color: #fcb900;
+}
+
+.stat-box {
+    background: #2b2b2b;
+    padding: 1rem;
+    margin: 0.5rem;
+    border-radius: 8px;
+    display: inline-block;
+    text-align: center;
+}
+
+.players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.player-card {
+    background: #1e1e1e;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(255,255,255,0.05);
+}
+
+.btn-primary {
+    background-color: #fcb900;
+    color: #000;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.features-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
