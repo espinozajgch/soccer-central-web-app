@@ -1,5 +1,5 @@
-from flask import Flask, render_template, jsonify
-from iterpro_client import get_players
+from flask import Flask, render_template, jsonify, request
+from iterpro_client import get_players, get_player_by_id
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -19,6 +19,20 @@ def get_players_function():
         return jsonify(get_players())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Para obtener detalles de un jugador específico
+@app.route("/players/<player_id>")
+def get_player_details(player_id):
+    try:
+        player = get_player_by_id(player_id)
+        return jsonify(player)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Para mostrar la página de detalles del jugador
+@app.route("/player")
+def player_details_page():
+    return render_template("player_details.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -23,3 +23,19 @@ def get_players():
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     return response.json()
+
+# Para obtener detalles de un jugador específico
+def get_player_by_id(player_id):
+    url = f"{BASE_URL}/players/{player_id}"
+    headers = {
+        "Authorization": AUTH_HEADER,
+        "x-iterpro-api-key": API_KEY,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    print("[DEBUG] Player Details URL:", url)
+    print("[DEBUG] Player Details HEADERS:", headers)
+
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()

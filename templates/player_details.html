@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="player-details-container">
+    <div class="container">
+        <!-- Back Button -->
+        <div class="back-button-container">
+            <button onclick="goBack()" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Players
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading player details...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="alert-error" style="display:none;">
+            <p><i class="fas fa-exclamation-circle"></i> <span id="error-message">Error loading player details</span></p>
+        </div>
+
+        <!-- Player Details Content -->
+        <div id="player-content" style="display:none;">
+            <!-- Player Header -->
+            <div class="player-header">
+                <div class="player-photo-container">
+                    <img id="player-photo" src="https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Player Photo" class="player-detail-photo" />
+                </div>
+                <div class="player-basic-info">
+                    <h1 id="player-name">Player Name</h1>
+                    <div class="player-meta">
+                        <span class="position-badge" id="player-position">Position</span>
+                        <span class="nationality-badge" id="player-nationality">Nationality</span>
+                        <span class="age-badge" id="player-age">Age</span>
+                    </div>
+                    <div class="player-stats-summary">
+                        <div class="stat-item">
+                            <span class="stat-label">Height</span>
+                            <span class="stat-value" id="player-height">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Weight</span>
+                            <span class="stat-value" id="player-weight">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Jersey</span>
+                            <span class="stat-value" id="player-jersey">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Details Grid -->
+            <div class="player-details-grid">
+                <!-- Personal Information -->
+                <div class="detail-section">
+                    <h3><i class="fas fa-user"></i> Personal Information</h3>
+                    <div class="detail-content">
+                        <div class="detail-row">
+                            <span class="detail-label">Full Name:</span>
+                            <span class="detail-value" id="player-full-name">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Birth Date:</span>
+                            <span class="detail-value" id="player-birth-date">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Birth Place:</span>
+                            <span class="detail-value" id="player-birth-place">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Nationality:</span>
+                            <span class="detail-value" id="player-nationality-detail">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Preferred Foot:</span>
+                            <span class="detail-value" id="player-foot">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Playing Information -->
+                <div class="detail-section">
+                    <h3><i class="fas fa-futbol"></i> Playing Information</h3>
+                    <div class="detail-content">
+                        <div class="detail-row">
+                            <span class="detail-label">Primary Position:</span>
+                            <span class="detail-value" id="player-primary-position">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Secondary Position:</span>
+                            <span class="detail-value" id="player-secondary-position">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Roles:</span>
+                            <span class="detail-value" id="player-roles">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Captain:</span>
+                            <span class="detail-value" id="player-captain">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Current Status:</span>
+                            <span class="detail-value" id="player-status">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Physical Information -->
+                <div class="detail-section">
+                    <h3><i class="fas fa-ruler"></i> Physical Information</h3>
+                    <div class="detail-content">
+                        <div class="detail-row">
+                            <span class="detail-label">Height:</span>
+                            <span class="detail-value" id="player-height-detail">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Weight:</span>
+                            <span class="detail-value" id="player-weight-detail">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Shoe Size:</span>
+                            <span class="detail-value" id="player-shoe-size">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contract Information -->
+                <div class="detail-section">
+                    <h3><i class="fas fa-file-contract"></i> Contract Information</h3>
+                    <div class="detail-content">
+                        <div class="detail-row">
+                            <span class="detail-label">Value:</span>
+                            <span class="detail-value" id="player-value">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Club Value:</span>
+                            <span class="detail-value" id="player-club-value">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Agent Value:</span>
+                            <span class="detail-value" id="player-agent-value">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">In Team From:</span>
+                            <span class="detail-value" id="player-team-from">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">In Team To:</span>
+                            <span class="detail-value" id="player-team-to">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education Information -->
+                <div class="detail-section">
+                    <h3><i class="fas fa-graduation-cap"></i> Education</h3>
+                    <div class="detail-content">
+                        <div class="detail-row">
+                            <span class="detail-label">Education Level:</span>
+                            <span class="detail-value" id="player-education">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">School:</span>
+                            <span class="detail-value" id="player-school">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Biography -->
+                <div class="detail-section full-width">
+                    <h3><i class="fas fa-book"></i> Biography</h3>
+                    <div class="detail-content">
+                        <p id="player-biography" class="biography-text">No biography available.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Get player ID from URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+const playerId = urlParams.get('id');
+
+if (playerId) {
+    loadPlayerDetails(playerId);
+} else {
+    showError('No player ID provided');
+}
+
+function loadPlayerDetails(playerId) {
+    fetch(`/players/${playerId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(player => {
+            displayPlayerDetails(player);
+        })
+        .catch(error => {
+            console.error('Error loading player details:', error);
+            showError('Failed to load player details: ' + error.message);
+        });
+}
+
+function displayPlayerDetails(player) {
+    // Hide loading, show content
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('player-content').style.display = 'block';
+
+    // Basic information
+    document.getElementById('player-name').textContent = player.displayName || `${player.name || ''} ${player.lastName || ''}`.trim();
+    document.getElementById('player-position').textContent = player.position || 'N/A';
+    document.getElementById('player-nationality').textContent = player.nationality || 'N/A';
+    document.getElementById('player-age').textContent = player.age ? `${player.age} years` : 'N/A';
+
+    // Physical stats
+    document.getElementById('player-height').textContent = player.height ? `${player.height} cm` : '-';
+    document.getElementById('player-weight').textContent = player.weight ? `${player.weight} kg` : '-';
+    document.getElementById('player-jersey').textContent = player.jersey || '-';
+
+    // Personal information
+    document.getElementById('player-full-name').textContent = `${player.name || ''} ${player.lastName || ''}`.trim() || 'N/A';
+    document.getElementById('player-birth-date').textContent = player.birthDate ? new Date(player.birthDate).toLocaleDateString() : 'N/A';
+    document.getElementById('player-birth-place').textContent = player.birthPlace || 'N/A';
+    document.getElementById('player-nationality-detail').textContent = player.nationality || 'N/A';
+    document.getElementById('player-foot').textContent = player.foot || 'N/A';
+
+    // Playing information
+    document.getElementById('player-primary-position').textContent = player.position || 'N/A';
+    document.getElementById('player-secondary-position').textContent = player.position2 || 'N/A';
+    document.getElementById('player-roles').textContent = player.role1 ? player.role1.join(', ') : 'N/A';
+    document.getElementById('player-captain').textContent = player.captain ? 'Yes' : 'No';
+    document.getElementById('player-status').textContent = player.currentStatus || 'N/A';
+
+    // Physical information
+    document.getElementById('player-height-detail').textContent = player.height ? `${player.height} cm` : 'N/A';
+    document.getElementById('player-weight-detail').textContent = player.weight ? `${player.weight} kg` : 'N/A';
+    document.getElementById('player-shoe-size').textContent = player.shoeSize || 'N/A';
+
+    // Contract information
+    document.getElementById('player-value').textContent = player.value ? `€${player.value.toLocaleString()}` : 'N/A';
+    document.getElementById('player-club-value').textContent = player.clubValue ? `€${player.clubValue.toLocaleString()}` : 'N/A';
+    document.getElementById('player-agent-value').textContent = player.agentValue ? `€${player.agentValue.toLocaleString()}` : 'N/A';
+    document.getElementById('player-team-from').textContent = player.inTeamFrom ? new Date(player.inTeamFrom).toLocaleDateString() : 'N/A';
+    document.getElementById('player-team-to').textContent = player.inTeamTo ? new Date(player.inTeamTo).toLocaleDateString() : 'N/A';
+
+    // Education
+    document.getElementById('player-education').textContent = player.education || 'N/A';
+    document.getElementById('player-school').textContent = player.school || 'N/A';
+
+    // Biography
+    document.getElementById('player-biography').textContent = player.biography || 'No biography available.';
+}
+
+function showError(message) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error-message').textContent = message;
+}
+
+function goBack() {
+    window.history.back();
+}
+</script>
+{% endblock %} 
