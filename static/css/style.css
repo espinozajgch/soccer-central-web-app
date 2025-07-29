@@ -41,6 +41,75 @@ header.site-header, footer.site-footer {
     text-align: center;
 }
 
+/* Search Bar Styles */
+.search-container {
+    margin: 2rem 0;
+}
+
+.search-box {
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto 1rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    z-index: 2;
+}
+
+.search-input {
+    width: 100%;
+    padding: 1rem 3rem 1rem 3rem;
+    border: 2px solid #333;
+    border-radius: 8px;
+    background: #1e1e1e;
+    color: #f2f2f2;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #fcb900;
+    box-shadow: 0 0 0 3px rgba(252, 185, 0, 0.1);
+}
+
+.search-input::placeholder {
+    color: #666;
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.clear-search-btn:hover {
+    background: #333;
+    color: #f2f2f2;
+}
+
+.search-results-info {
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
 .players-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -54,6 +123,38 @@ header.site-header, footer.site-footer {
     border-radius: 8px;
     text-align: center;
     box-shadow: 0 0 10px rgba(255,255,255,0.05);
+    overflow: hidden;
+}
+
+.player-photo {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.player-info {
+    padding: 0.5rem 0;
+}
+
+.player-name {
+    margin: 0 0 0.5rem 0;
+    color: #f2f2f2;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.player-position {
+    margin: 0 0 0.5rem 0;
+    color: #fcb900;
+    font-size: 0.9rem;
+}
+
+.player-info p {
+    margin: 0.25rem 0;
+    color: #ccc;
+    font-size: 0.85rem;
 }
 
 .btn-primary {
@@ -71,4 +172,321 @@ header.site-header, footer.site-footer {
     gap: 1rem;
     justify-content: space-between;
     margin-top: 2rem;
+}
+
+/* Player Details Page Styles */
+.player-details-container {
+    padding: 2rem 0;
+    min-height: 100vh;
+}
+
+.back-button-container {
+    margin-bottom: 2rem;
+}
+
+.btn-secondary {
+    background-color: #2b2b2b;
+    color: #f2f2f2;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #444;
+    border-color: #666;
+}
+
+.loading-container {
+    text-align: center;
+    padding: 4rem 0;
+    background: #1e1e1e;
+    border-radius: 8px;
+    margin: 2rem 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.spinner {
+    border: 4px solid #2b2b2b;
+    border-top: 4px solid #fcb900;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+.loading-container p {
+    color: #ccc;
+    font-size: 1rem;
+    margin: 0;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.alert-error {
+    background-color: #2d1b1b;
+    border: 1px solid #8b0000;
+    color: #ff6b6b;
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+}
+
+.player-header {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    background: #1e1e1e;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.player-photo-container {
+    flex-shrink: 0;
+}
+
+.player-detail-photo {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #fcb900;
+}
+
+.player-basic-info {
+    flex: 1;
+}
+
+.player-basic-info h1 {
+    margin: 0 0 1rem 0;
+    font-size: 2.5rem;
+    color: #fcb900;
+}
+
+.player-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.position-badge, .nationality-badge, .age-badge {
+    background: #2b2b2b;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    border: 1px solid #444;
+}
+
+.position-badge {
+    background: #fcb900;
+    color: #000;
+    border-color: #fcb900;
+}
+
+.player-stats-summary {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fcb900;
+}
+
+.player-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.detail-section {
+    background: #1e1e1e;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.detail-section.full-width {
+    grid-column: 1 / -1;
+}
+
+.detail-section h3 {
+    margin: 0 0 1rem 0;
+    color: #fcb900;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #333;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: #ccc;
+    min-width: 120px;
+}
+
+.detail-value {
+    color: #f2f2f2;
+    text-align: right;
+    flex: 1;
+}
+
+.biography-text {
+    line-height: 1.6;
+    color: #ccc;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .search-box {
+        max-width: 100%;
+        margin: 0 auto 1rem;
+    }
+    
+    .search-input {
+        padding: 0.875rem 2.5rem 0.875rem 2.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .search-icon {
+        left: 0.75rem;
+    }
+    
+    .clear-search-btn {
+        right: 0.75rem;
+    }
+    
+    .players-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .player-photo {
+        height: 180px;
+    }
+    
+    .player-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .player-detail-photo {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .player-basic-info h1 {
+        font-size: 2rem;
+    }
+    
+    .player-meta {
+        justify-content: center;
+    }
+    
+    .player-stats-summary {
+        justify-content: center;
+    }
+    
+    .player-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .detail-value {
+        text-align: left;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-input {
+        padding: 0.75rem 2.25rem 0.75rem 2.25rem;
+        font-size: 0.85rem;
+    }
+    
+    .search-icon {
+        left: 0.5rem;
+    }
+    
+    .clear-search-btn {
+        right: 0.5rem;
+    }
+    
+    .search-results-info {
+        font-size: 0.8rem;
+    }
+    
+    .players-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .player-photo {
+        height: 160px;
+    }
+    
+    .player-card {
+        padding: 0.75rem;
+    }
+    
+    .player-name {
+        font-size: 1rem;
+    }
+    
+    .player-meta {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .player-stats-summary {
+        flex-direction: column;
+        gap: 1rem;
+    }
 }
