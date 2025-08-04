@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Navbar 
+    // Navbar smooth scroll
     const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
     navLinks.forEach(link => {
         link.addEventListener('click', function (e) {
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Scroll 
+    // Scroll Navbar background
     const navbar = document.querySelector('.site-header');
     if (navbar) {
         window.addEventListener('scroll', () => {
@@ -22,8 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ==== SEARCH FUNCTIONALITY (Protected) ====
-
+    // Search functionality
     const searchInput = document.getElementById('player-search');
     const clearSearchBtn = document.getElementById('clear-search');
     const searchResultsCount = document.getElementById('search-results-count');
@@ -182,7 +181,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     displayPlayers(players);
                     updateSearchResultsInfo(players.length, players.length);
                 }
-
             })
             .catch(err => {
                 console.error('Error loading players:', err);
@@ -192,7 +190,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (error) error.style.display = 'block';
             });
     }
-
 });
 
 // Calcular edad
@@ -205,7 +202,7 @@ function calculateAge(dateString) {
     return age;
 }
 
-// Navegar a detalle
+// Navegar a detalle de jugador
 function viewPlayer(playerId) {
     window.location.href = `/player?id=${playerId}`;
 }

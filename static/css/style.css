@@ -470,4 +470,53 @@ body {
     .main-nav { gap: 1rem; }
     }
     
-    
+    /* Botón Back to Players */
+.back-button-container .btn-secondary {
+    background-color: transparent;
+    border: 2px solid #f5b400;
+    color: #f5b400;
+    font-weight: 600;
+    padding: 0.6rem 1.3rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 0 transparent;
+    user-select: none;
+}
+
+.back-button-container .btn-secondary:hover {
+    background-color: #f5b400;
+    color: #121212;
+    box-shadow: 0 4px 14px rgba(245, 180, 0, 0.6);
+}
+
+/* Botón View Profile en cards */
+.btn-primary {
+    background-color: #f5b400;
+    color: #121212;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    user-select: none;
+}
+
+.btn-primary i {
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    background-color: #d8a300;
+    box-shadow: 0 6px 20px rgba(245, 180, 0, 0.75);
+    color: #121212;
+}
