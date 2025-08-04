@@ -4,21 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Soccer Central SA - Football Academy{% endblock %}</title>
-
     <!-- Fonts and Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,600,700&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-
-    <!-- Custom Styles -->
+    <!-- Custom Styles (actualiza path si necesario) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
-    <!-- Header / Navbar -->
     <header class="site-header">
-        <div class="container">
+        <div class="container" style="display:flex;justify-content:space-between;align-items:center">
             <div class="logo-section">
                 <img src="{{ url_for('static', filename='images/soccer-central.png') }}" alt="Soccer Central SA" class="logo" />
-                <span class="site-title">Soccer Central SA</span>
             </div>
             <nav class="main-nav">
                 <a href="{{ url_for('index') }}">Home</a>
@@ -27,12 +23,10 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="site-main">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
     <footer class="site-footer">
         <div class="container footer-grid">
             <div>
@@ -57,8 +51,6 @@
             <p>&copy; 2025 Soccer Central SA. All rights reserved.</p>
         </div>
     </footer>
-
-    <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
