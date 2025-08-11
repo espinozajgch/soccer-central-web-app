@@ -107,8 +107,12 @@
                             <span class="detail-value" id="player-captain">-</span>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Teams Played:</span>
-                            <!--<span class="detail-value" id="player-teams">-</span>-->
+                            <span class="detail-label">Current Team:</span>
+                            <span class="detail-value" id="player-team">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Team ID:</span>
+                            <span class="detail-value long-id" id="player-team-id">-</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Current Status:</span>
@@ -157,7 +161,30 @@ function loadPlayerDetails(playerId) {
             return response.json();
         })
         .then(player => {
-            displayPlayerDetails(player);
+            // If player has a team ID, fetch team information
+            if (player.teamId) {
+                return fetch(`/teams/${player.teamId}`)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            console.warn('Could not fetch team details, using fallback');
+                            return null;
+                        }
+                    })
+                    .then(teamData => {
+                        return { player, teamData };
+                    })
+                    .catch(error => {
+                        console.warn('Error fetching team data:', error);
+                        return { player, teamData: null };
+                    });
+            } else {
+                return { player, teamData: null };
+            }
+        })
+        .then(data => {
+            displayPlayerDetails(data.player, data.teamData);
         })
         .catch(error => {
             console.error('Error loading player details:', error);
@@ -170,7 +197,7 @@ function safeSetText(id, value) {
     if (el) el.textContent = value;
 }
 
-function displayPlayerDetails(player) {
+function displayPlayerDetails(player, teamData) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('player-content').style.display = 'block';
 
@@ -200,9 +227,22 @@ function displayPlayerDetails(player) {
     const isCaptain = (player._teamSettings || []).some(team => team.captain) || player.captain;
     safeSetText('player-captain', isCaptain ? 'Yes' : 'No');
 
-    let teams = (player._teamSettings || []).map(ts => ts.teamId)
-        .filter((v,i,a) => v && a.indexOf(v) === i).join(', ');
-    safeSetText('player-teams', teams || '-');
+    // Display team information
+    if (teamData && teamData.name) {
+        safeSetText('player-team', teamData.name);
+    } else if (player.teamId) {
+        safeSetText('player-team', `Team ${player.teamId.slice(-4)}`);
+    } else {
+        safeSetText('player-team', 'N/A');
+    }
+    
+    // Format team ID for better readability
+    if (player.teamId) {
+        const formattedTeamId = player.teamId.replace(/(.{8})(.{8})(.{8})(.{8})/, '$1-$2-$3-$4');
+        safeSetText('player-team-id', formattedTeamId);
+    } else {
+        safeSetText('player-team-id', 'N/A');
+    }
     safeSetText('player-status', player.currentStatus || 'N/A');
 
     // Athletic metrics

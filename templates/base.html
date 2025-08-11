@@ -19,6 +19,14 @@
             <nav class="main-nav">
                 <a href="{{ url_for('index') }}">Home</a>
                 <a href="{{ url_for('get_players_function') }}">API Players</a>
+                {% if session.get('user') %}
+                    <span class="user-info">
+                        <i class="fas fa-user"></i> {{ session.user.name }} ({{ session.user.role }})
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                {% endif %}
             </nav>
         </div>
     </header>
