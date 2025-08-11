@@ -150,12 +150,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     <img src="${img}" alt="${name}" class="player-photo" />
                     <div class="player-info">
                         <h3 class="player-name">${name}</h3>
-                        <p class="player-position"><i class="fas fa-user-tag"></i> ${pos}</p>
-                        <p><i class="fas fa-flag"></i> ${nationality}</p>
                         <div class="team-info">
                             ${teamBadge ? `<img src="${teamBadge}" alt="${teamName}" class="team-badge" />` : ''}
                             <span class="team-name"><i class="fas fa-users"></i> ${teamName}</span>
-                            ${teamId !== 'N/A' ? `<small class="team-id">ID: ${teamId.slice(-6)}</small>` : ''}
+                        </div>
+                        <div class="player-details-row">
+                            <span class="player-position"><i class="fas fa-user-tag"></i> ${pos}</span>
+                            <span class="player-nationality"><i class="fas fa-flag"></i> ${nationality}</span>
                         </div>
                         <button onclick="viewPlayer('${p.id}')" class="btn-primary">
                             <i class="fas fa-eye"></i> View Profile

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Soccer Central SA - Login</title>
     <!-- Fonts and Icons -->
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,600,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@300;400;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <!-- Custom Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
@@ -15,18 +15,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #121234 0%, #1a1a4a 100%);
             padding: 20px;
         }
         
         .login-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             padding: 40px;
             width: 100%;
             max-width: 400px;
             text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .login-logo {
@@ -36,14 +38,17 @@
         }
         
         .login-title {
+            font-family: 'Bebas Neue', sans-serif;
             font-size: 28px;
             font-weight: 700;
-            color: #333;
+            color: #ffffff;
             margin-bottom: 10px;
+            letter-spacing: 1px;
         }
         
         .login-subtitle {
-            color: #666;
+            font-family: 'Roboto Condensed', sans-serif;
+            color: #cccccc;
             margin-bottom: 30px;
             font-size: 16px;
         }
@@ -57,69 +62,88 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #333;
+            color: #ffffff;
+            font-family: 'Roboto Condensed', sans-serif;
         }
         
         .form-group input {
             width: 100%;
             padding: 12px 15px;
-            border: 2px solid #e1e5e9;
+            border: 2px solid #647AB3;
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s ease;
             box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            backdrop-filter: blur(10px);
         }
         
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #DCC788;
+        }
+        
+        .form-group input::placeholder {
+            color: #cccccc;
         }
         
         .login-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #DCC788;
+            color: #000000;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease;
+            transition: all 0.3s ease;
+            font-family: 'Roboto Condensed', sans-serif;
         }
         
         .login-btn:hover {
+            background: #c4b377;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 199, 136, 0.75);
         }
         
         .error-message {
-            background: #fee;
-            color: #c33;
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 20px;
-            border: 1px solid #fcc;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            backdrop-filter: blur(10px);
         }
         
         .demo-credentials {
             margin-top: 30px;
             padding: 20px;
-            background: #f8f9fa;
+            background: rgba(100, 122, 179, 0.2);
             border-radius: 8px;
             text-align: left;
+            border: 1px solid rgba(100, 122, 179, 0.3);
+            backdrop-filter: blur(10px);
         }
         
         .demo-credentials h4 {
             margin-bottom: 15px;
-            color: #333;
+            color: #ffffff;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
         }
         
         .demo-credentials .role {
             margin-bottom: 10px;
+            color: #ffffff;
+            font-family: 'Roboto', sans-serif;
         }
         
         .demo-credentials .role strong {
-            color: #667eea;
+            color: #DCC788;
+            font-weight: 600;
         }
     </style>
 </head>
