@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Auto-clear flash messages after 5 seconds
+    const flashMessages = document.querySelectorAll('.flash-messages .alert');
+    flashMessages.forEach(message => {
+        setTimeout(() => {
+            message.classList.add('fade-out');
+            setTimeout(() => {
+                message.remove();
+            }, 300);
+        }, 5000);
+    });
+
     // Navbar smooth scroll
     const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
     navLinks.forEach(link => {
@@ -75,10 +86,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     const name = (player.displayName || `${player.name || ''} ${player.lastName || ''}`.trim()).toLowerCase();
                     const position = (player.position || '').toLowerCase();
                     const nationality = (player.nationality || '').toLowerCase();
+                    const teamName = (player.teamInfo?.name || '').toLowerCase();
 
                     return name.includes(searchTerm) ||
                         position.includes(searchTerm) ||
-                        nationality.includes(searchTerm);
+                        nationality.includes(searchTerm) ||
+                        teamName.includes(searchTerm);
                 });
 
                 displayPlayers(filteredPlayers);
@@ -126,6 +139,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const img = 'https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg?auto=compress&cs=tinysrgb&w=400';
                 const pos = p.position || p.role1?.join(', ') || 'N/A';
                 const nationality = p.nationality || 'N/A';
+                
+                // Team information
+                const teamName = p.teamInfo?.name || (p.teamId ? `Team ${p.teamId.slice(-4)}` : 'Unknown Team');
+                const teamBadge = p.teamInfo?.badge || p.teamInfo?.logo || p.teamInfo?.crest || null;
+                const teamId = p.teamId || 'N/A';
 
                 return `
                 <div class="player-card">
@@ -134,6 +152,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h3 class="player-name">${name}</h3>
                         <p class="player-position"><i class="fas fa-user-tag"></i> ${pos}</p>
                         <p><i class="fas fa-flag"></i> ${nationality}</p>
+                        <div class="team-info">
+                            ${teamBadge ? `<img src="${teamBadge}" alt="${teamName}" class="team-badge" />` : ''}
+                            <span class="team-name"><i class="fas fa-users"></i> ${teamName}</span>
+                            ${teamId !== 'N/A' ? `<small class="team-id">ID: ${teamId.slice(-6)}</small>` : ''}
+                        </div>
                         <button onclick="viewPlayer('${p.id}')" class="btn-primary">
                             <i class="fas fa-eye"></i> View Profile
                         </button>
@@ -163,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Fetch players only if search block exists
+        // Fetch players data and get team information
         fetch('/players')
             .then(res => res.json())
             .then(players => {
@@ -175,12 +198,99 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                if (savedSearchTerm) {
-                    filterPlayers(savedSearchTerm);
-                } else {
-                    displayPlayers(players);
-                    updateSearchResultsInfo(players.length, players.length);
-                }
+                // Get unique team IDs from players
+                const uniqueTeamIds = [...new Set(players.map(p => p.teamId).filter(id => id))];
+                
+                // First try to fetch all teams at once (more efficient)
+                fetch('/teams')
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`HTTP ${res.status}`);
+                        }
+                        return res.json();
+                    })
+                    .then(allTeams => {
+                        console.log('All teams data:', allTeams);
+                        
+                        // Create a map of team information from all teams
+                        const teamsMap = {};
+                        if (Array.isArray(allTeams)) {
+                            allTeams.forEach(team => {
+                                if (team._id) {
+                                    teamsMap[team._id] = team;
+                                }
+                            });
+                        }
+                        
+                        // Add team information to players
+                        allPlayers = allPlayers.map(player => ({
+                            ...player,
+                            teamInfo: teamsMap[player.teamId] || { name: `Team ${player.teamId?.slice(-4) || 'Unknown'}` }
+                        }));
+                        filteredPlayers = allPlayers;
+
+                        if (savedSearchTerm) {
+                            filterPlayers(savedSearchTerm);
+                        } else {
+                            displayPlayers(allPlayers);
+                            updateSearchResultsInfo(allPlayers.length, allPlayers.length);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching all teams, falling back to individual requests:', error);
+                        
+                        // Fallback: fetch team information for each unique team ID individually
+                        const teamPromises = uniqueTeamIds.map(teamId => 
+                            fetch(`/teams/${teamId}`)
+                                .then(res => {
+                                    if (!res.ok) {
+                                        throw new Error(`HTTP ${res.status}`);
+                                    }
+                                    return res.json();
+                                })
+                                .then(team => {
+                                    console.log(`Team data for ${teamId}:`, team);
+                                    return { id: teamId, ...team };
+                                })
+                                .catch(error => {
+                                    console.error(`Error fetching team ${teamId}:`, error);
+                                    return { id: teamId, name: `Team ${teamId.slice(-4)}` };
+                                })
+                        );
+
+                        Promise.all(teamPromises)
+                            .then(teams => {
+                                // Create a map of team information
+                                const teamsMap = {};
+                                teams.forEach(team => {
+                                    teamsMap[team.id] = team;
+                                });
+
+                                // Add team information to players
+                                allPlayers = allPlayers.map(player => ({
+                                    ...player,
+                                    teamInfo: teamsMap[player.teamId] || { name: `Team ${player.teamId?.slice(-4) || 'Unknown'}` }
+                                }));
+                                filteredPlayers = allPlayers;
+
+                                if (savedSearchTerm) {
+                                    filterPlayers(savedSearchTerm);
+                                } else {
+                                    displayPlayers(allPlayers);
+                                    updateSearchResultsInfo(allPlayers.length, allPlayers.length);
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Error loading team data:', err);
+                                // Fallback: display players without team info
+                                if (savedSearchTerm) {
+                                    filterPlayers(savedSearchTerm);
+                                } else {
+                                    displayPlayers(allPlayers);
+                                    updateSearchResultsInfo(allPlayers.length, allPlayers.length);
+                                }
+                            });
+                    });
             })
             .catch(err => {
                 console.error('Error loading players:', err);

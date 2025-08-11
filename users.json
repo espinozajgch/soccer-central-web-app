@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "role": "admin",
+      "name": "System Administrator",
+      "team_id": null
+    },
+    {
+      "id": 2,
+      "username": "coach1",
+      "password": "coach123",
+      "role": "coach",
+      "name": "Coach John Smith",
+      "team_id": "599163302cb97ded3d64cc85"
+    },
+    {
+      "id": 3,
+      "username": "coach2",
+      "password": "coach456",
+      "role": "coach",
+      "name": "Coach Maria Garcia",
+      "team_id": "599163302cb97ded3d64cc85"
+    },
+    {
+      "id": 4,
+      "username": "Pietro1",
+      "password": "player123",
+      "role": "player",
+      "name": "Player Pietro1",
+      "player_id": "5991645e3014990d3741a9a8",
+      "team_id": "599163302cb97ded3d64cc85"
+    },
+    {
+      "id": 5,
+      "username": "player2",
+      "password": "player456",
+      "role": "player",
+      "name": "Player Pietro2",
+      "player_id": "5991645e3014990d3741a9a9",
+      "team_id": "599163302cb97ded3d64cc85"
+    }
+  ]
+}
