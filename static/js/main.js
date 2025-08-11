@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const count = document.getElementById('players-count');
 
             loadingContainer.style.display = 'none';
-            container.style.display = 'grid';
+            container.style.display = 'block';
 
             if (!players || !players.length) {
                 container.innerHTML = `
@@ -134,57 +134,66 @@ document.addEventListener('DOMContentLoaded', function () {
 
             count.textContent = players.length;
 
-            const cards = players.map(p => {
-                const name = p.displayName || `${p.name || ''} ${p.lastName || ''}`.trim();
-                const img = 'https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg?auto=compress&cs=tinysrgb&w=400';
-                const pos = p.position || p.role1?.join(', ') || 'N/A';
-                const nationality = p.nationality || 'N/A';
-                
-                // Team information
+            // Group players by team
+            const teamsMap = {};
+            players.forEach(p => {
                 const teamName = p.teamInfo?.name || (p.teamId ? `Team ${p.teamId.slice(-4)}` : 'Unknown Team');
-                const teamBadge = p.teamInfo?.badge || p.teamInfo?.logo || p.teamInfo?.crest || null;
-                const teamId = p.teamId || 'N/A';
+                if (!teamsMap[teamName]) {
+                    teamsMap[teamName] = [];
+                }
+                teamsMap[teamName].push(p);
+            });
+
+            // Create accordion structure
+            const accordionHTML = Object.entries(teamsMap).map(([teamName, teamPlayers], teamIndex) => {
+                const teamId = `team-${teamIndex}`;
+                const playerCards = teamPlayers.map(p => {
+                    const name = p.displayName || `${p.name || ''} ${p.lastName || ''}`.trim();
+                    const img = 'https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg?auto=compress&cs=tinysrgb&w=400';
+                    const pos = p.position || p.role1?.join(', ') || 'N/A';
+                    const nationality = p.nationality || 'N/A';
+                    const teamBadge = p.teamInfo?.badge || p.teamInfo?.logo || p.teamInfo?.crest || null;
+
+                    return `
+                    <div class="player-card">
+                        <img src="${img}" alt="${name}" class="player-photo" />
+                        <div class="player-info">
+                            <h3 class="player-name">${name}</h3>
+                            <div class="player-details-row">
+                                <span class="player-position"><i class="fas fa-user-tag"></i> ${pos}</span>
+                                <span class="player-nationality"><i class="fas fa-flag"></i> ${nationality}</span>
+                                <span class="player-jersey-card"><i class="fas fa-tshirt"></i> ${p.jersey ? `#${p.jersey}` : 'N/A'}</span>
+                            </div>
+                            <button onclick="viewPlayer('${p.id}')" class="btn-primary">
+                                <i class="fas fa-eye"></i> View Profile
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
 
                 return `
-                <div class="player-card">
-                    <img src="${img}" alt="${name}" class="player-photo" />
-                    <div class="player-info">
-                        <h3 class="player-name">${name}</h3>
-                        <div class="team-info">
-                            ${teamBadge ? `<img src="${teamBadge}" alt="${teamName}" class="team-badge" />` : ''}
-                            <span class="team-name"><i class="fas fa-users"></i> ${teamName}</span>
+                <div class="team-accordion">
+                    <div class="team-header" onclick="toggleTeam('${teamId}')">
+                        <div class="team-header-content">
+                            <div class="team-info-header">
+                                ${teamPlayers[0]?.teamInfo?.badge ? `<img src="${teamPlayers[0].teamInfo.badge}" alt="${teamName}" class="team-badge-header" />` : ''}
+                                <span class="team-name-header">${teamName}</span>
+                            </div>
+                            <div class="team-stats">
+                                <span class="player-count">${teamPlayers.length} player${teamPlayers.length !== 1 ? 's' : ''}</span>
+                                <i class="fas fa-chevron-down accordion-icon" id="icon-${teamId}"></i>
+                            </div>
                         </div>
-                        <div class="player-details-row">
-                            <span class="player-position"><i class="fas fa-user-tag"></i> ${pos}</span>
-                            <span class="player-nationality"><i class="fas fa-flag"></i> ${nationality}</span>
+                    </div>
+                    <div class="team-content" id="${teamId}">
+                        <div class="players-grid">
+                            ${playerCards}
                         </div>
-                        <button onclick="viewPlayer('${p.id}')" class="btn-primary">
-                            <i class="fas fa-eye"></i> View Profile
-                        </button>
                     </div>
                 </div>`;
             }).join('');
 
-            container.innerHTML = cards;
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            }, {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            });
-
-            document.querySelectorAll('.player-card, .feature').forEach((el, i) => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(30px)';
-                el.style.transition = `opacity 0.6s ease ${i * 0.1}s, transform 0.6s ease ${i * 0.1}s`;
-                observer.observe(el);
-            });
+            container.innerHTML = accordionHTML;
         }
 
         // Fetch players data and get team information
@@ -316,4 +325,21 @@ function calculateAge(dateString) {
 // Navegar a detalle de jugador
 function viewPlayer(playerId) {
     window.location.href = `/player?id=${playerId}`;
+}
+
+function toggleTeam(teamId) {
+    const teamContent = document.getElementById(teamId);
+    const icon = document.getElementById(`icon-${teamId}`);
+    
+    if (teamContent.style.display === 'none' || teamContent.style.display === '') {
+        teamContent.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+        teamContent.style.opacity = '1';
+        teamContent.style.maxHeight = teamContent.scrollHeight + 'px';
+    } else {
+        teamContent.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+        teamContent.style.opacity = '0';
+        teamContent.style.maxHeight = '0';
+    }
 }
