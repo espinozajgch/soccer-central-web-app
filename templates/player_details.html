@@ -310,30 +310,8 @@ function displayPlayerDetails(player, teamData) {
     }
     safeSetText('player-status', player.currentStatus || 'N/A');
 
-    // Athletic metrics
-    const perfDiv = document.getElementById('performance-metrics');
-    if (perfDiv) {
-        const metrics = [
-            { title: 'Anthropometry', array: player._thresholdsAnthropometry, icon: 'fa-ruler' },
-            { title: 'Power', array: player._thresholdsPower, icon: 'fa-bolt' },
-            { title: 'Speed', array: player._thresholdsSpeed, icon: 'fa-tachometer-alt' },
-            { title: 'Agility', array: player._thresholdsAgility, icon: 'fa-shoe-prints' },
-            { title: 'Endurance', array: player._thresholdsEndurance, icon: 'fa-running' }
-        ];
-        let perfHTML = '';
-        for (const cat of metrics) {
-            if (Array.isArray(cat.array) && cat.array.length > 0) {
-                perfHTML += `<div style="margin-bottom:1.2rem;">
-                    <strong style="color: var(--text-primary);"><i class="fas ${cat.icon}"></i> ${cat.title}</strong>
-                    <ul style="margin:.4rem 0 .6rem 1.1rem;color: var(--text-primary);font-size:.95rem">`;
-                cat.array.slice(0,4).forEach(metric => {
-                    perfHTML += `<li>${metric.name}: <span style="color:#f5b400">${metric.value}</span> <span style="opacity:.7;color: var(--text-secondary);">${metric.metric || ''}</span></li>`;
-                });
-                perfHTML += `</ul></div>`;
-            }
-        }
-        perfDiv.innerHTML = perfHTML || '<span style="color: var(--text-secondary);">No athletic data available.</span>';
-    }
+    // Load enhanced athletic performance data
+    loadEnhancedAthleticPerformance(playerId);
 
     safeSetText('player-biography', player.biography || 'No biography available.');
 }
@@ -393,6 +371,124 @@ function calculateAge(dateString) {
     const m = today.getMonth() - birth.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
     return age;
+}
+
+// Load enhanced athletic performance data
+function loadEnhancedAthleticPerformance(playerId) {
+    fetch(`/players/${playerId}/athletic-performance`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            displayEnhancedAthleticPerformance(data);
+        })
+        .catch(error => {
+            console.error('Error loading enhanced athletic performance:', error);
+            // Fallback to basic display
+            const perfDiv = document.getElementById('performance-metrics');
+            if (perfDiv) {
+                perfDiv.innerHTML = '<span style="color: var(--text-secondary);">No athletic data available.</span>';
+            }
+        });
+}
+
+// Display enhanced athletic performance data
+function displayEnhancedAthleticPerformance(data) {
+    const container = document.getElementById('performance-metrics');
+    if (!container || !data.enhanced_data) {
+        console.error('Athletic performance container or data not found');
+        return;
+    }
+
+    let html = '<div class="athletic-performance-section">';
+    html += '<h3><i class="fas fa-chart-line"></i> Enhanced Athletic Performance</h3>';
+    
+    // Process each category
+    for (const [category, tests] of Object.entries(data.enhanced_data)) {
+        html += `<div class="category-section">`;
+        html += `<h4 class="category-title">${category}</h4>`;
+        
+        for (const [testName, testData] of Object.entries(tests)) {
+            html += displayTestWithHistory(testName, testData);
+        }
+        
+        html += `</div>`;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function displayTestWithHistory(testName, testData) {
+    const unit = testData.unit || '';
+    const measurements = testData.measurements || [];
+    const positionAgeMedian = testData.position_age_median;
+    const teamMedian = testData.team_median;
+    
+    let html = `<div class="test-section">`;
+    html += `<h5 class="test-title">${testName}</h5>`;
+    
+    // Display historical measurements
+    if (measurements.length > 0) {
+        html += `<div class="measurements-list">`;
+        html += `<div class="measurements-header">`;
+        html += `<span class="measurement-date">Date</span>`;
+        html += `<span class="measurement-value">Value</span>`;
+        html += `<span class="measurement-type">Type</span>`;
+        html += `</div>`;
+        
+        for (const measurement of measurements) {
+            const isReal = measurement.is_real;
+            const symbol = isReal ? '●' : '○';
+            const symbolClass = isReal ? 'real-data' : 'generated-data';
+            const tooltip = isReal ? 'Real measurement' : 'Generated data';
+            
+            html += `<div class="measurement-row">`;
+            html += `<span class="measurement-date">${measurement.date}</span>`;
+            // Format value to show only 2 decimal points for non-integer data
+            let formattedValue = measurement.value;
+            if (typeof measurement.value === 'number' && !Number.isInteger(measurement.value)) {
+                formattedValue = measurement.value.toFixed(2);
+            }
+            html += `<span class="measurement-value">${formattedValue}${unit}</span>`;
+            html += `<span class="measurement-type ${symbolClass}" title="${tooltip}">${symbol}</span>`;
+            html += `</div>`;
+        }
+        html += `</div>`;
+    }
+    
+    // Display median comparisons
+    html += `<div class="median-comparisons">`;
+    html += `<h6 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 0.9rem; width: 100%;">📊 Comparative Analysis</h6>`;
+    if (positionAgeMedian !== null && positionAgeMedian !== undefined) {
+        // Format median to show only 2 decimal points for non-integer data
+        let formattedPositionMedian = positionAgeMedian;
+        if (typeof positionAgeMedian === 'number' && !Number.isInteger(positionAgeMedian)) {
+            formattedPositionMedian = positionAgeMedian.toFixed(2);
+        }
+        html += `<div class="median-box position-age-median">`;
+        html += `<span class="median-label">Position & Age Median (±3):</span>`;
+        html += `<span class="median-value">${formattedPositionMedian}${unit}</span>`;
+        html += `</div>`;
+    }
+    if (teamMedian !== null && teamMedian !== undefined) {
+        // Format median to show only 2 decimal points for non-integer data
+        let formattedTeamMedian = teamMedian;
+        if (typeof teamMedian === 'number' && !Number.isInteger(teamMedian)) {
+            formattedTeamMedian = teamMedian.toFixed(2);
+        }
+        html += `<div class="median-box team-median">`;
+        html += `<span class="median-label">Team Median:</span>`;
+        html += `<span class="median-value">${formattedTeamMedian}${unit}</span>`;
+        html += `</div>`;
+    }
+    html += `</div>`;
+    
+    html += `</div>`;
+    return html;
 }
 </script>
 {% endblock %}

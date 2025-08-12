@@ -1013,6 +1013,171 @@ header.site-header, footer.site-footer {
     font-size: 14px;
 }
 
+/* Enhanced Athletic Performance Styles */
+.athletic-performance-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.athletic-performance-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 0.5rem;
+}
+
+.category-section {
+    margin-bottom: 2rem;
+}
+
+.category-title {
+    color: var(--accent-color);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    border-left: 4px solid var(--accent-color);
+    padding-left: 1rem;
+}
+
+.test-section {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.test-title {
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.measurements-list {
+    margin-bottom: 1rem;
+}
+
+.measurements-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 80px;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.measurement-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 80px;
+    gap: 1rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+}
+
+.measurement-row:last-child {
+    border-bottom: none;
+}
+
+.measurement-date {
+    color: var(--text-secondary);
+    font-family: monospace;
+}
+
+.measurement-value {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.measurement-type {
+    text-align: center;
+    font-size: 1.2rem;
+    cursor: help;
+}
+
+.real-data {
+    color: #4CAF50;
+}
+
+.generated-data {
+    color: #FF9800;
+}
+
+.median-comparisons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.median-box {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 1rem;
+    border-left: 4px solid;
+    min-width: 200px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.median-box:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.position-age-median {
+    border-left-color: #4CAF50;
+}
+
+.team-median {
+    border-left-color: #2196F3;
+}
+
+.median-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.median-value {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .measurements-header,
+    .measurement-row {
+        grid-template-columns: 1fr 1fr 60px;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .median-comparisons {
+        flex-direction: column;
+    }
+    
+    .median-box {
+        min-width: auto;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 950px) {
     .features-grid { 
