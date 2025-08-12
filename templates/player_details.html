@@ -30,6 +30,7 @@
                 </div>
                 <div class="player-basic-info">
                     <h1 id="player-name">Player Name</h1>
+                    <p id="player-team-name" class="player-team-name">Team Name</p>
                     <div class="player-meta">
                         <span class="position-badge" id="player-position">Position</span>
                         <span class="nationality-badge" id="player-nationality">Nationality</span>
@@ -55,6 +56,15 @@
                 <div class="detail-section">
                     <h3><i class="fas fa-user"></i> Personal & Academic Info</h3>
                     <div class="detail-content">
+                        <div class="detail-row">
+                            <span class="detail-label">Player ID:</span>
+                            <div class="detail-value-container">
+                                <span class="detail-value" id="player-id">-</span>
+                                <button class="copy-btn" id="copy-player-id" style="display: none;" title="Copy full Player ID">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
                         <div class="detail-row">
                             <span class="detail-label">Full Name:</span>
                             <span class="detail-value" id="player-full-name">-</span>
@@ -91,6 +101,15 @@
                     <h3><i class="fas fa-futbol"></i> Playing & Team Info</h3>
                     <div class="detail-content">
                         <div class="detail-row">
+                            <span class="detail-label">Team ID:</span>
+                            <div class="detail-value-container">
+                                <span class="detail-value" id="player-team-id">-</span>
+                                <button class="copy-btn" id="copy-team-id" style="display: none;" title="Copy full Team ID">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="detail-row">
                             <span class="detail-label">Primary Position:</span>
                             <span class="detail-value" id="player-primary-position">-</span>
                         </div>
@@ -109,10 +128,6 @@
                         <div class="detail-row">
                             <span class="detail-label">Current Team:</span>
                             <span class="detail-value" id="player-team">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Team ID:</span>
-                            <span class="detail-value long-id" id="player-team-id">-</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Current Status:</span>
@@ -202,15 +217,38 @@ function displayPlayerDetails(player, teamData) {
     document.getElementById('player-content').style.display = 'block';
 
     safeSetText('player-name', player.displayName || `${player.name || ''} ${player.lastName || ''}`.trim());
-    safeSetText('player-position', player.position || 'N/A');
-    safeSetText('player-nationality', player.nationality || 'N/A');
+    
+    // Set position badge with icon
+    const positionElement = document.getElementById('player-position');
+    if (positionElement) {
+        positionElement.innerHTML = `<i class="fas fa-user-tag"></i> ${player.position || 'N/A'}`;
+    }
+    
+    // Set nationality badge with icon
+    const nationalityElement = document.getElementById('player-nationality');
+    if (nationalityElement) {
+        nationalityElement.innerHTML = `<i class="fas fa-flag"></i> ${player.nationality || 'N/A'}`;
+    }
 
+    // Set age badge with icon
     let ageText = 'N/A';
     if (player.birthDate) ageText = calculateAge(player.birthDate) + ' years';
     else if (player.age) ageText = `${player.age} years`;
-    safeSetText('player-age', ageText);
+    
+    const ageElement = document.getElementById('player-age');
+    if (ageElement) {
+        ageElement.innerHTML = `<i class="fas fa-birthday-cake"></i> ${ageText}`;
+    }
 
-    safeSetText('player-jersey', player.jersey ? `#${player.jersey}` : '-');
+    // Set jersey badge with icon
+    const jerseyElement = document.getElementById('player-jersey');
+    if (jerseyElement) {
+        if (player.jersey) {
+            jerseyElement.innerHTML = `<i class="fas fa-tshirt"></i> #${player.jersey}`;
+        } else {
+            jerseyElement.innerHTML = `<i class="fas fa-tshirt"></i> -`;
+        }
+    }
     safeSetText('player-height', player.height && player.height > 0 ? `${player.height} cm` : '-');
     safeSetText('player-weight', player.weight && player.weight > 0 ? `${player.weight} kg` : '-');
     safeSetText('player-full-name', `${player.name || ''} ${player.lastName || ''}`.trim() || 'N/A');
@@ -220,6 +258,19 @@ function displayPlayerDetails(player, teamData) {
     safeSetText('player-foot', player.foot || 'N/A');
     safeSetText('player-education', player.education || 'N/A');
     safeSetText('player-school', player.school || 'N/A');
+    
+    // Format player ID to show only first 6 characters
+    if (player._id) {
+        const shortPlayerId = player._id.substring(0, 6) + '...';
+        safeSetText('player-id', shortPlayerId);
+        
+        // Show copy button and set up copy functionality
+        const copyPlayerBtn = document.getElementById('copy-player-id');
+        copyPlayerBtn.style.display = 'inline-flex';
+        copyPlayerBtn.onclick = () => copyToClipboard(player._id, 'Player ID copied to clipboard!', 'copy-player-id');
+    } else {
+        safeSetText('player-id', 'N/A');
+    }
     safeSetText('player-primary-position', player.position || 'N/A');
     safeSetText('player-secondary-position', player.position2 || 'N/A');
     safeSetText('player-roles', player.role1 && player.role1.length > 0 ? player.role1.join(', ') : 'N/A');
@@ -228,18 +279,32 @@ function displayPlayerDetails(player, teamData) {
     safeSetText('player-captain', isCaptain ? 'Yes' : 'No');
 
     // Display team information
+    let teamDisplayName = 'N/A';
     if (teamData && teamData.name) {
+        teamDisplayName = teamData.name;
         safeSetText('player-team', teamData.name);
     } else if (player.teamId) {
-        safeSetText('player-team', `Team ${player.teamId.slice(-4)}`);
+        teamDisplayName = `Team ${player.teamId.slice(-4)}`;
+        safeSetText('player-team', teamDisplayName);
     } else {
         safeSetText('player-team', 'N/A');
     }
     
-    // Format team ID for better readability
+    // Set team name in header
+    const teamNameElement = document.getElementById('player-team-name');
+    if (teamNameElement) {
+        teamNameElement.innerHTML = `<i class="fas fa-users"></i> ${teamDisplayName}`;
+    }
+    
+    // Format team ID to show only first 6 characters
     if (player.teamId) {
-        const formattedTeamId = player.teamId.replace(/(.{8})(.{8})(.{8})(.{8})/, '$1-$2-$3-$4');
-        safeSetText('player-team-id', formattedTeamId);
+        const shortTeamId = player.teamId.substring(0, 6) + '...';
+        safeSetText('player-team-id', shortTeamId);
+        
+        // Show copy button and set up copy functionality
+        const copyBtn = document.getElementById('copy-team-id');
+        copyBtn.style.display = 'inline-flex';
+        copyBtn.onclick = () => copyToClipboard(player.teamId, 'Team ID copied to clipboard!');
     } else {
         safeSetText('player-team-id', 'N/A');
     }
@@ -259,15 +324,15 @@ function displayPlayerDetails(player, teamData) {
         for (const cat of metrics) {
             if (Array.isArray(cat.array) && cat.array.length > 0) {
                 perfHTML += `<div style="margin-bottom:1.2rem;">
-                    <strong><i class="fas ${cat.icon}"></i> ${cat.title}</strong>
-                    <ul style="margin:.4rem 0 .6rem 1.1rem;color:#666;font-size:.95rem">`;
+                    <strong style="color: var(--text-primary);"><i class="fas ${cat.icon}"></i> ${cat.title}</strong>
+                    <ul style="margin:.4rem 0 .6rem 1.1rem;color: var(--text-primary);font-size:.95rem">`;
                 cat.array.slice(0,4).forEach(metric => {
-                    perfHTML += `<li>${metric.name}: <span style="color:#f5b400">${metric.value}</span> <span style="opacity:.7;">${metric.metric || ''}</span></li>`;
+                    perfHTML += `<li>${metric.name}: <span style="color:#f5b400">${metric.value}</span> <span style="opacity:.7;color: var(--text-secondary);">${metric.metric || ''}</span></li>`;
                 });
                 perfHTML += `</ul></div>`;
             }
         }
-        perfDiv.innerHTML = perfHTML || '<span style="color:#bbb;">No athletic data available.</span>';
+        perfDiv.innerHTML = perfHTML || '<span style="color: var(--text-secondary);">No athletic data available.</span>';
     }
 
     safeSetText('player-biography', player.biography || 'No biography available.');
@@ -283,6 +348,41 @@ function showError(message) {
 
 function goBack() {
     window.history.back();
+}
+
+// Copy to clipboard function
+function copyToClipboard(text, message, buttonId = 'copy-team-id') {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success message
+        const copyBtn = document.getElementById(buttonId);
+        const originalHTML = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+        copyBtn.style.background = '#28a745';
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = originalHTML;
+            copyBtn.style.background = '';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        const copyBtn = document.getElementById(buttonId);
+        const originalHTML = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+        copyBtn.style.background = '#28a745';
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = originalHTML;
+            copyBtn.style.background = '';
+        }, 2000);
+    });
 }
 
 // Función auxiliar para calcular edad desde fecha de nacimiento
