@@ -7,9 +7,13 @@ from iterpro_client import (
     get_player_test_instances_batch, extract_latest_test_value
 )
 from auth import authenticate_user, login_required, role_required, get_user_team_players, get_user_player_profile
+from database import MedianCache
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = 'your-secret-key-change-this-in-production'
+
+# Initialize median cache
+median_cache = MedianCache()
 
 # Authentication routes
 @app.route("/login", methods=["GET", "POST"])
@@ -186,7 +190,8 @@ def get_enhanced_athletic_performance_route(player_id):
         
         # Get all players for median calculations
         all_players = get_players()
-        team_players = get_players_by_team(player.get('teamId')) if player.get('teamId') else []
+        team_id = player.get('teamId')
+        team_players = get_players_by_team(team_id) if team_id else []
         
         # Fetch test instances for all relevant players
         all_player_ids = [p.get('_id') for p in all_players if p.get('_id')]
@@ -218,7 +223,7 @@ def get_enhanced_athletic_performance_route(player_id):
                 
                 # Calculate team median
                 team_median = calculate_team_median(
-                    team_players, test_name, team_players_test_data
+                    team_players, test_name, team_players_test_data, team_id
                 )
                 
                 # Debug logging for median calculations
@@ -270,6 +275,54 @@ def get_enhanced_athletic_performance_route(player_id):
         print(f"Error in athletic performance route: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
+# Settings page for admin cache management
+@app.route("/settings")
+@login_required
+@role_required('admin')
+def settings():
+    """Settings page for admin cache management"""
+    try:
+        # Get cache statistics
+        cache_stats = median_cache.get_cache_stats()
+        
+        return render_template("settings.html", cache_stats=cache_stats)
+    except Exception as e:
+        print(f"Error in settings route: {e}")
+        return render_template("settings.html", cache_stats={}, error=str(e))
+
+@app.route("/settings/invalidate-cache", methods=["POST"])
+@login_required
+@role_required('admin')
+def invalidate_cache():
+    """Invalidate all cached median data"""
+    try:
+        user = session.get('user')
+        reason = request.form.get('reason', 'Manual invalidation by admin')
+        
+        # Invalidate cache
+        median_cache.invalidate_all_cache(user.get('name', 'Admin'), reason)
+        
+        flash('Cache invalidated successfully', 'success')
+        return redirect(url_for('settings'))
+    except Exception as e:
+        print(f"Error invalidating cache: {e}")
+        flash('Error invalidating cache', 'error')
+        return redirect(url_for('settings'))
+
+@app.route("/settings/cleanup-cache", methods=["POST"])
+@login_required
+@role_required('admin')
+def cleanup_cache():
+    """Clean up expired cache entries"""
+    try:
+        deleted_count = median_cache.cleanup_expired_cache()
+        flash(f'Cleaned up {deleted_count} expired cache entries', 'success')
+        return redirect(url_for('settings'))
+    except Exception as e:
+        print(f"Error cleaning up cache: {e}")
+        flash('Error cleaning up cache', 'error')
+        return redirect(url_for('settings'))
+
 def calculate_median_by_position_and_age(all_players, current_player, test_name, all_players_test_data):
     """
     Calculate median for players with same position and ±3 age range
@@ -294,6 +347,15 @@ def calculate_median_by_position_and_age(all_players, current_player, test_name,
             else:
                 current_age = 25  # Default age
         
+        # Generate age range for caching
+        age_range = median_cache.get_age_range(current_age)
+        
+        # Try to get from cache first
+        cached_median = median_cache.get_cached_position_age_median(test_name, current_position, age_range)
+        if cached_median is not None:
+            print(f"[CACHE HIT] Position/Age median for {test_name} - {current_position} {age_range}: {cached_median}")
+            return cached_median
+        
         print(f"[DEBUG] Looking for position: {current_position}, age: {current_age}, test: {test_name}")
         
         # Filter players by position and age range (±3 years)
@@ -310,15 +372,26 @@ def calculate_median_by_position_and_age(all_players, current_player, test_name,
                 (player_position in current_position)
             )
             
-            # Check if age is within ±3 range
-            age_match = abs(player_age - current_age) <= 3
+            # Check if age is within appropriate range based on player age
+            if current_age < 18:
+                # For younger players, use smaller ranges
+                if current_age < 14:
+                    age_match = 14 <= player_age <= 17
+                elif current_age < 16:
+                    age_match = 14 <= player_age <= 17
+                else:
+                    age_match = 16 <= player_age <= 19
+            else:
+                # For adult players, use ±3 range
+                age_match = abs(player_age - current_age) <= 3
             
             if position_match and age_match and player_id:
                 # Get test value for this player from the batch data
                 test_instances = all_players_test_data.get(player_id, [])
-                test_value = extract_latest_test_value(test_instances, test_name)
-                if test_value is not None:
-                    filtered_players.append(test_value)
+                if test_instances is not None:  # Add null check
+                    test_value = extract_latest_test_value(test_instances, test_name)
+                    if test_value is not None:
+                        filtered_players.append(test_value)
         
         # Calculate median
         print(f"[DEBUG] Found {len(filtered_players)} players with matching criteria")
@@ -329,8 +402,13 @@ def calculate_median_by_position_and_age(all_players, current_player, test_name,
                 median = (filtered_players[n//2 - 1] + filtered_players[n//2]) / 2
             else:
                 median = filtered_players[n//2]
-            print(f"[DEBUG] Calculated median: {median}")
-            return round(median, 2)
+            median_value = round(median, 2)
+            
+            # Cache the result
+            median_cache.cache_position_age_median(test_name, current_position, age_range, median_value, len(filtered_players))
+            print(f"[CACHE STORED] Position/Age median for {test_name} - {current_position} {age_range}: {median_value} (from {len(filtered_players)} players)")
+            
+            return median_value
         
         print(f"[DEBUG] No players found with matching criteria")
         return None
@@ -339,7 +417,7 @@ def calculate_median_by_position_and_age(all_players, current_player, test_name,
         print(f"Error calculating position/age median: {e}")
         return None
 
-def calculate_team_median(team_players, test_name, team_players_test_data):
+def calculate_team_median(team_players, test_name, team_players_test_data, team_id=None):
     """
     Calculate median for players in the same team
     """
@@ -347,6 +425,13 @@ def calculate_team_median(team_players, test_name, team_players_test_data):
         if not team_players or not team_players_test_data:
             print(f"[DEBUG] Team median early return - team_players: {bool(team_players)}, team_players_test_data: {bool(team_players_test_data)}")
             return None
+        
+        # Try to get from cache first if team_id is provided
+        if team_id:
+            cached_median = median_cache.get_cached_team_median(test_name, team_id)
+            if cached_median is not None:
+                print(f"[CACHE HIT] Team median for {test_name} - team {team_id}: {cached_median}")
+                return cached_median
         
         print(f"[DEBUG] Calculating team median for test: {test_name}, team players: {len(team_players)}")
         
@@ -356,9 +441,10 @@ def calculate_team_median(team_players, test_name, team_players_test_data):
             if player_id:
                 # Get test value for this player from the batch data
                 test_instances = team_players_test_data.get(player_id, [])
-                test_value = extract_latest_test_value(test_instances, test_name)
-                if test_value is not None:
-                    test_values.append(test_value)
+                if test_instances is not None:  # Add null check
+                    test_value = extract_latest_test_value(test_instances, test_name)
+                    if test_value is not None:
+                        test_values.append(test_value)
         
         # Calculate median
         print(f"[DEBUG] Found {len(test_values)} team players with test data")
@@ -369,8 +455,14 @@ def calculate_team_median(team_players, test_name, team_players_test_data):
                 median = (test_values[n//2 - 1] + test_values[n//2]) / 2
             else:
                 median = test_values[n//2]
-            print(f"[DEBUG] Calculated team median: {median}")
-            return round(median, 2)
+            median_value = round(median, 2)
+            
+            # Cache the result if team_id is provided
+            if team_id:
+                median_cache.cache_team_median(test_name, team_id, median_value, len(test_values))
+                print(f"[CACHE STORED] Team median for {test_name} - team {team_id}: {median_value} (from {len(test_values)} players)")
+            
+            return median_value
         
         print(f"[DEBUG] No team players found with test data")
         return None

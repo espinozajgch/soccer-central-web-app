@@ -135,13 +135,17 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Athletic Performance Metrics -->
-                <div class="detail-section">
+            <!-- Athletic Performance Section -->
+            <div class="athletic-performance-container">
+                <div class="detail-section full-width">
                     <h3><i class="fas fa-chart-line"></i> Athletic Performance</h3>
-                    <div class="detail-content" id="performance-metrics">
+                                    <div class="detail-content" id="performance-metrics">
+                    <div class="athletic-performance-grid">
                         <span style="color:#bbb;">Loading metrics...</span>
                     </div>
+                </div>
                 </div>
             </div>
 
@@ -403,92 +407,249 @@ function displayEnhancedAthleticPerformance(data) {
         return;
     }
 
-    let html = '<div class="athletic-performance-section">';
-    html += '<h3><i class="fas fa-chart-line"></i> Enhanced Athletic Performance</h3>';
+    let html = '<div class="athletic-performance-grid">';
     
-    // Process each category
+    // Process each category and test, combining them into a single grid
     for (const [category, tests] of Object.entries(data.enhanced_data)) {
-        html += `<div class="category-section">`;
-        html += `<h4 class="category-title">${category}</h4>`;
-        
         for (const [testName, testData] of Object.entries(tests)) {
-            html += displayTestWithHistory(testName, testData);
+            html += displayTestWithChart(category, testName, testData);
         }
-        
-        html += `</div>`;
     }
     
     html += '</div>';
     container.innerHTML = html;
+    
+    // Initialize all charts after DOM is ready
+    setTimeout(() => {
+        initializeCharts(data.enhanced_data);
+    }, 100);
 }
 
-function displayTestWithHistory(testName, testData) {
+function displayTestWithChart(category, testName, testData) {
     const unit = testData.unit || '';
     const measurements = testData.measurements || [];
     const positionAgeMedian = testData.position_age_median;
     const teamMedian = testData.team_median;
     
+    // Create unique chart ID
+    const chartId = `chart-${testName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
+    
     let html = `<div class="test-section">`;
-    html += `<h5 class="test-title">${testName}</h5>`;
+    html += `<h5 class="test-title">${category} - ${testName}</h5>`;
     
-    // Display historical measurements
-    if (measurements.length > 0) {
-        html += `<div class="measurements-list">`;
-        html += `<div class="measurements-header">`;
-        html += `<span class="measurement-date">Date</span>`;
-        html += `<span class="measurement-value">Value</span>`;
-        html += `<span class="measurement-type">Type</span>`;
-        html += `</div>`;
-        
-        for (const measurement of measurements) {
-            const isReal = measurement.is_real;
-            const symbol = isReal ? '●' : '○';
-            const symbolClass = isReal ? 'real-data' : 'generated-data';
-            const tooltip = isReal ? 'Real measurement' : 'Generated data';
-            
-            html += `<div class="measurement-row">`;
-            html += `<span class="measurement-date">${measurement.date}</span>`;
-            // Format value to show only 2 decimal points for non-integer data
-            let formattedValue = measurement.value;
-            if (typeof measurement.value === 'number' && !Number.isInteger(measurement.value)) {
-                formattedValue = measurement.value.toFixed(2);
-            }
-            html += `<span class="measurement-value">${formattedValue}${unit}</span>`;
-            html += `<span class="measurement-type ${symbolClass}" title="${tooltip}">${symbol}</span>`;
-            html += `</div>`;
-        }
-        html += `</div>`;
-    }
-    
-    // Display median comparisons
-    html += `<div class="median-comparisons">`;
-    html += `<h6 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 0.9rem; width: 100%;">📊 Comparative Analysis</h6>`;
-    if (positionAgeMedian !== null && positionAgeMedian !== undefined) {
-        // Format median to show only 2 decimal points for non-integer data
-        let formattedPositionMedian = positionAgeMedian;
-        if (typeof positionAgeMedian === 'number' && !Number.isInteger(positionAgeMedian)) {
-            formattedPositionMedian = positionAgeMedian.toFixed(2);
-        }
-        html += `<div class="median-box position-age-median">`;
-        html += `<span class="median-label">Position & Age Median (±3):</span>`;
-        html += `<span class="median-value">${formattedPositionMedian}${unit}</span>`;
-        html += `</div>`;
-    }
-    if (teamMedian !== null && teamMedian !== undefined) {
-        // Format median to show only 2 decimal points for non-integer data
-        let formattedTeamMedian = teamMedian;
-        if (typeof teamMedian === 'number' && !Number.isInteger(teamMedian)) {
-            formattedTeamMedian = teamMedian.toFixed(2);
-        }
-        html += `<div class="median-box team-median">`;
-        html += `<span class="median-label">Team Median:</span>`;
-        html += `<span class="median-value">${formattedTeamMedian}${unit}</span>`;
-        html += `</div>`;
-    }
+    // Chart container
+    html += `<div class="chart-container">`;
+    html += `<canvas id="${chartId}" width="400" height="200"></canvas>`;
     html += `</div>`;
+    
+    // Store data for chart initialization
+    if (!window.chartData) window.chartData = {};
+    window.chartData[chartId] = {
+        testName,
+        measurements,
+        positionAgeMedian,
+        teamMedian,
+        unit
+    };
     
     html += `</div>`;
     return html;
+}
+
+// Initialize all charts
+function initializeCharts(enhancedData) {
+    if (!window.chartData) return;
+    
+    Object.keys(window.chartData).forEach(chartId => {
+        const data = window.chartData[chartId];
+        const canvas = document.getElementById(chartId);
+        if (!canvas) return;
+        
+        createChart(canvas, data);
+    });
+}
+
+// Create individual chart
+function createChart(canvas, data) {
+    const ctx = canvas.getContext('2d');
+    
+                    // Prepare data for chart - single line with different point colors
+                const labels = [];
+                const allData = [];
+                const pointColors = [];
+                
+                data.measurements.forEach((measurement, index) => {
+                    const date = new Date(measurement.date);
+                    const formattedDate = date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    
+                    labels.push(formattedDate);
+                    allData.push(measurement.value);
+                    
+                    // Set point color based on data type
+                    if (measurement.is_real) {
+                        pointColors.push('#4CAF50'); // Green for real data
+                    } else {
+                        pointColors.push('#FF9800'); // Orange for generated data
+                    }
+                });
+                
+                // Create single dataset with dynamic point colors
+                const datasets = [
+                    {
+                        label: 'Measurements',
+                        data: allData,
+                        borderColor: '#4CAF50',
+                        backgroundColor: '#4CAF50',
+                        pointBackgroundColor: pointColors,
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.1,
+                        fill: false
+                    }
+                ];
+    
+    // Add median lines if available
+    if (data.positionAgeMedian !== null && data.positionAgeMedian !== undefined) {
+        datasets.push({
+            label: 'Position & Age Median',
+            data: Array(labels.length).fill(data.positionAgeMedian),
+            borderColor: '#2196F3',
+            backgroundColor: '#2196F3',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 0,
+            fill: false,
+            type: 'line'
+        });
+    }
+    
+    if (data.teamMedian !== null && data.teamMedian !== undefined) {
+        datasets.push({
+            label: 'Team Median',
+            data: Array(labels.length).fill(data.teamMedian),
+            borderColor: '#9C27B0',
+            backgroundColor: '#9C27B0',
+            borderWidth: 2,
+            borderDash: [3, 3],
+            pointRadius: 0,
+            fill: false,
+            type: 'line'
+        });
+    }
+    
+    // Chart configuration
+    const config = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#333333',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                                                            label: function(context) {
+                                        const value = context.parsed.y;
+                                        if (value === null) return null;
+                                        
+                                        let formattedValue = value;
+                                        if (typeof value === 'number' && !Number.isInteger(value)) {
+                                            formattedValue = value.toFixed(2);
+                                        }
+                                        
+                                        const unit = data.unit || '';
+                                        const datasetIndex = context.datasetIndex;
+                                        const datasets = context.chart.data.datasets;
+                                        const dataset = datasets[datasetIndex];
+                                        
+                                        // Check if this is a median line dataset
+                                        if (dataset.label && dataset.label.includes('Median')) {
+                                            if (dataset.label.includes('Position/Age')) {
+                                                return `Position/Age Median: ${formattedValue}${unit} - Average performance for players in same position (±3 years age range)`;
+                                            } else if (dataset.label.includes('Team')) {
+                                                return `Team Median: ${formattedValue}${unit} - Average performance for all players in current team`;
+                                            } else {
+                                                return `${dataset.label}: ${formattedValue}${unit}`;
+                                            }
+                                        }
+                                        
+                                        // For measurement data points
+                                        const pointIndex = context.dataIndex;
+                                        const measurement = data.measurements[pointIndex];
+                                        
+                                        // Determine data type based on the measurement
+                                        const dataType = measurement.is_real ? 'Real' : 'Generated';
+                                        return `Measurement: ${formattedValue}${unit} (${dataType})`;
+                                    }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#ffffff',
+                        maxRotation: 45
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#ffffff',
+                        callback: function(value) {
+                            if (typeof value === 'number' && !Number.isInteger(value)) {
+                                return value.toFixed(2);
+                            }
+                            return value;
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    };
+    
+    // Create the chart
+    new Chart(ctx, config);
 }
 </script>
 {% endblock %}

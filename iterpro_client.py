@@ -8,7 +8,11 @@ import time
 import random
 import numpy as np
 from datetime import datetime, timedelta
+from database import MedianCache
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+
+# Initialize median cache
+median_cache = MedianCache()
 
 BASE_URL = os.getenv("BASE_URL")
 API_KEY = os.getenv("API_KEY")
@@ -367,6 +371,12 @@ def get_players_by_team(team_id):
 
 def get_player_test_instances(player_id):
     """Get test instances for a specific player"""
+    # Try to get from cache first
+    cached_data = median_cache.get_cached_test_instances(player_id)
+    if cached_data is not None:
+        print(f"[CACHE HIT] Test instances for player {player_id}")
+        return cached_data
+    
     url = f"{BASE_URL}/players/{player_id}/test-instances"
     headers = {
         "Authorization": AUTH_HEADER,
@@ -378,7 +388,13 @@ def get_player_test_instances(player_id):
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        return response.json()
+        test_instances = response.json()
+        
+        # Cache the result
+        median_cache.cache_test_instances(player_id, test_instances)
+        print(f"[CACHE STORED] Test instances for player {player_id}")
+        
+        return test_instances
     except requests.exceptions.RequestException as e:
         print(f"[DEBUG] Error getting player test instances: {str(e)}")
         return []
@@ -393,6 +409,15 @@ def get_player_test_instances_batch(player_ids, max_players=10):
         
         # Limit the number of players to avoid API overload
         limited_player_ids = player_ids[:max_players]
+        
+        # Create cache key for this batch
+        cache_key = f"batch_{len(limited_player_ids)}_players"
+        
+        # Try to get from cache first
+        cached_data = median_cache.get_cached_test_data(cache_key)
+        if cached_data is not None:
+            print(f"[CACHE HIT] Batch test data for {len(limited_player_ids)} players")
+            return cached_data
         
         print(f"[DEBUG] Fetching test instances for {len(limited_player_ids)} players")
         
@@ -409,6 +434,11 @@ def get_player_test_instances_batch(player_ids, max_players=10):
                 continue
         
         print(f"[DEBUG] Total players with test data: {len(all_test_data)}")
+        
+        # Cache the batch result
+        median_cache.cache_test_data(cache_key, all_test_data, len(all_test_data))
+        print(f"[CACHE STORED] Batch test data for {len(all_test_data)} players")
+        
         return all_test_data
         
     except Exception as e:
@@ -420,7 +450,7 @@ def extract_latest_test_value(test_instances, test_name):
     Extract the latest test value for a specific test name from test instances
     """
     try:
-        if not test_instances:
+        if not test_instances or test_instances is None:
             return None
         
         print(f"[DEBUG] Looking for test '{test_name}' in {len(test_instances)} instances")
