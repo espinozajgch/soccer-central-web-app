@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Cache Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="settings-header">
+        <h1><i class="fas fa-cog"></i> System Settings</h1>
+        <p class="settings-subtitle">Cache management and system configuration</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'error' if category == 'error' else 'success' }}">
+                    <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }}"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="settings-grid">
+        <!-- Cache Statistics -->
+        <div class="settings-section">
+            <h2><i class="fas fa-chart-bar"></i> Cache Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ cache_stats.get('total_entries', 0) }}</div>
+                    <div class="stat-label">Total Cached Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ cache_stats.get('valid_entries', 0) }}</div>
+                    <div class="stat-label">Valid Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ cache_stats.get('expired_entries', 0) }}</div>
+                    <div class="stat-label">Expired Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ cache_stats.get('team_entries', 0) }}</div>
+                    <div class="stat-label">Team Medians</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ cache_stats.get('position_age_entries', 0) }}</div>
+                    <div class="stat-label">Position/Age Medians</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ cache_stats.get('test_instances_entries', 0) }}</div>
+                    <div class="stat-label">Test Instances</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ cache_stats.get('test_data_entries', 0) }}</div>
+                    <div class="stat-label">Test Data Batches</div>
+                </div>
+            </div>
+
+            {% if cache_stats.get('last_invalidation') %}
+            <div class="last-invalidation">
+                <h3>Last Cache Invalidation</h3>
+                <p><strong>By:</strong> {{ cache_stats.last_invalidation[0] }}</p>
+                <p><strong>Date:</strong> {{ cache_stats.last_invalidation[1] }}</p>
+                <p><strong>Reason:</strong> {{ cache_stats.last_invalidation[2] }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Cache Management -->
+        <div class="settings-section">
+            <h2><i class="fas fa-database"></i> Cache Management</h2>
+            
+            <div class="action-card">
+                <h3>Clean Up Expired Cache</h3>
+                <p>Remove all expired cache entries to free up storage space.</p>
+                <form method="POST" action="{{ url_for('cleanup_cache') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-broom"></i> Clean Up Cache
+                    </button>
+                </form>
+            </div>
+
+            <div class="action-card">
+                <h3>Invalidate All Cache</h3>
+                <p>Clear all cached median data. This will force recalculation of all medians on next access.</p>
+                <form method="POST" action="{{ url_for('invalidate_cache') }}">
+                    <div class="form-group">
+                        <label for="reason">Reason (optional):</label>
+                        <input type="text" id="reason" name="reason" placeholder="e.g., Data update, System maintenance" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to invalidate all cache? This action cannot be undone.')">
+                        <i class="fas fa-trash"></i> Invalidate All Cache
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Cache Information -->
+        <div class="settings-section">
+            <h2><i class="fas fa-info-circle"></i> Cache Information</h2>
+            <div class="info-card">
+                <h3>How the Cache Works</h3>
+                <ul>
+                    <li><strong>Team Medians:</strong> Cached per team and test type (7 days)</li>
+                    <li><strong>Position/Age Medians:</strong> Cached per position, age range, and test type (7 days)</li>
+                    <li><strong>Test Instances:</strong> Cached per player (1 day)</li>
+                    <li><strong>Test Data Batches:</strong> Cached per batch of players (1 day)</li>
+                    <li><strong>Age Ranges:</strong> 
+                        <ul>
+                            <li>14-17: Young players (under 18)</li>
+                            <li>16-19: U18 players</li>
+                            <li>18-21, 22-25, 26-29, etc.: Adult players</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
