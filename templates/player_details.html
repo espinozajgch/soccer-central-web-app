@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="player-details-container">
+<div class="player-details-container" id="player-report-root">
     <div class="container">
         <!-- Back Button -->
         <div class="back-button-container">
@@ -46,6 +46,11 @@
                             <span class="stat-label">Weight</span>
                             <span class="stat-value" id="player-weight">-</span>
                         </div>
+                    </div>
+                    <div class="player-actions">
+                        <button class="btn-download-report" id="download-report-btn" style="display:none;">
+                            <i class="fas fa-download"></i> Download Report
+                        </button>
                     </div>
                 </div>
             </div>
@@ -253,6 +258,16 @@ function displayPlayerDetails(player, teamData) {
             jerseyElement.innerHTML = `<i class="fas fa-tshirt"></i> -`;
         }
     }
+    
+    // Show download report button
+    const downloadBtn = document.getElementById('download-report-btn');
+    if (downloadBtn) {
+        downloadBtn.style.display = 'inline-flex';
+    }
+    
+    // Store player data globally for report download
+    window.currentPlayerData = player;
+    window.currentTeamData = teamData;
     safeSetText('player-height', player.height && player.height > 0 ? `${player.height} cm` : '-');
     safeSetText('player-weight', player.weight && player.weight > 0 ? `${player.weight} kg` : '-');
     safeSetText('player-full-name', `${player.name || ''} ${player.lastName || ''}`.trim() || 'N/A');
@@ -477,6 +492,16 @@ function createChart(canvas, data) {
                 const labels = [];
                 const allData = [];
                 const pointColors = [];
+                // Validar y limpiar datos antes de crear el gráfico
+                if (data.measurements) {
+                    data.measurements = data.measurements.map(measurement => {
+                        if (typeof measurement.value === 'number' && 
+                            (isNaN(measurement.value) || !isFinite(measurement.value))) {
+                            measurement.value = 0;
+                        }
+                        return measurement;
+                    });
+                }
                 
                 data.measurements.forEach((measurement, index) => {
                     const date = new Date(measurement.date);
@@ -648,8 +673,26 @@ function createChart(canvas, data) {
         }
     };
     
-    // Create the chart
-    new Chart(ctx, config);
+    // Create the chart and ensure it's registered properly
+    const chart = new Chart(ctx, config);
+    
+    // Store reference for PDF generation (opcional)
+    if (!window.__charts) window.__charts = [];
+    window.__charts.push(chart);
+    
+    return chart;
+}
+
+// Download player report function
+function downloadPlayerReport() {
+    if (!playerId) {
+        console.error('No player ID available for report');
+        return;
+    }
+    
+    // Open report in new tab for printing/saving as PDF
+    const reportUrl = `/player-report/${playerId}`;
+    //window.open(reportUrl, '_blank');
 }
 </script>
 {% endblock %}

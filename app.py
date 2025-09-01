@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from functools import wraps
 import json
+from datetime import datetime
 from iterpro_client import (
     get_players, get_teams, get_player_by_id, get_team_by_id, 
     get_players_by_team, get_enhanced_athletic_performance,
@@ -523,6 +524,54 @@ def cache_cleanup():
         return jsonify({"message": f"Cleaned up {removed_count} expired cache files"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/player-report/<player_id>')
+@login_required    
+def player_report(player_id):
+    """Generate a printable player report"""
+    try:
+        # Get player data
+        player_data = get_player_by_id(player_id)
+        if not player_data:
+            flash('Player not found', 'error')
+            return redirect(url_for('index'))
+        
+        # Get team data if available
+        team_data = None
+        if player_data.get('teamId'):
+            team_data = get_team_by_id(player_data['teamId'])
+        
+        # Get enhanced athletic performance data
+        athletic_performance_data = get_enhanced_athletic_performance(player_id, player_data.get('teamId'))
+        
+        # Helper function for age calculation
+        def calculate_age(birth_date_str):
+            try:
+                if birth_date_str:
+                    birth_date = datetime.fromisoformat(birth_date_str.replace('Z', '+00:00'))
+                    today = datetime.now()
+                    age = today.year - birth_date.year
+                    if today.month < birth_date.month or (today.month == birth_date.month and today.day < birth_date.day):
+                        age -= 1
+                    return age
+                return None
+            except:
+                return None
+        
+        return render_template(
+            'player_report.html',
+            player=player_data,
+            team=team_data,
+            athletic_performance=athletic_performance_data,
+            current_datetime=datetime.now(),
+            calculate_age=calculate_age
+        )
+    except Exception as e:
+        print(f"Error generating player report: {e}")
+        flash('Error generating player report', 'error')
+        return redirect(url_for('index'))
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

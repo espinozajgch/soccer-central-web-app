@@ -1154,6 +1154,43 @@ header.site-header, footer.site-footer {
     color: var(--accent-high-text);
 }
 
+/* Download Report Button */
+.player-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-download-report {
+    background: linear-gradient(135deg, var(--accent-high), #c4b377);
+    color: var(--accent-high-text);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Roboto Condensed', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(220, 199, 136, 0.3);
+}
+
+.btn-download-report:hover {
+    background: linear-gradient(135deg, #c4b377, var(--accent-high));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 199, 136, 0.5);
+}
+
+.btn-download-report i {
+    font-size: 1.1rem;
+}
+
 /* Authentication Styles */
 .user-info {
     color: var(--accent-high);
@@ -1440,3 +1477,142 @@ header.site-header, footer.site-footer {
         gap: 1rem; 
     }
 }
+
+/* Print Styles for Player Report */
+@media print {
+    body {
+        background: white !important;
+        color: #333 !important;
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+    
+    .site-header,
+    .site-footer,
+    .back-button-container,
+    .player-actions,
+    .btn-download-report {
+        display: none !important;
+    }
+    
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .player-report-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .report-header {
+        background: white !important;
+        color: #333 !important;
+        border-bottom: 2px solid #333 !important;
+        page-break-inside: avoid;
+    }
+    
+    .report-section {
+        background: white !important;
+        border: 1px solid #ddd !important;
+        color: #333 !important;
+        page-break-inside: avoid;
+        margin-bottom: 1rem !important;
+    }
+    
+    .report-section h3 {
+        color: #333 !important;
+        background: #f5f5f5 !important;
+        margin: 0 !important;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .detail-row {
+        border-bottom: 1px solid #eee !important;
+    }
+    
+    .detail-label {
+        color: #666 !important;
+    }
+    
+    .detail-value {
+        color: #333 !important;
+    }
+    
+    .chart-container {
+        background: white !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .athletic-performance-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    .test-section {
+        background: white !important;
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
+    }
+    
+    .test-title {
+        color: #333 !important;
+        background: #f8f9fa !important;
+        margin: 0 !important;
+        padding: 0.5rem !important;
+    }
+}
+/* PDF Generation - Chart container fixes */
+.chart-container {
+    position: relative;
+    height: 280px;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    padding: 1rem;
+    max-width: 372px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  /* Hide elements during PDF generation */
+  [data-html2canvas-ignore="true"] {
+    display: none !important;
+  }
+  
+  .pdf-generating {
+    pointer-events: none;
+  }
+  
+  /* Enhanced Print Styles para eliminación completa de headers/footers */
+  @media print {
+    @page {
+      margin: 0;
+      size: A4;
+    }
+    
+    body {
+      background: white !important;
+      color: #333 !important;
+      font-size: 12pt;
+      line-height: 1.4;
+      margin: 0 !important;
+      padding: 20px !important;
+    }
+  
+    .site-header,
+    .site-footer,
+    .back-button-container,
+    .player-actions,
+    .btn-download-report {
+      display: none !important;
+    }
+  }
+  
