@@ -310,6 +310,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (error) error.style.display = 'block';
             });
     }
+
+    // ===============================
+    // INICIALIZAR PDF FUNCTIONALITY
+    // ===============================
+    // Setup download button when page loads
+    setupDownloadButton();
 });
 
 // Calcular edad
@@ -342,4 +348,419 @@ function toggleTeam(teamId) {
         teamContent.style.opacity = '0';
         teamContent.style.maxHeight = '0';
     }
+}
+
+// ===============================
+// PDF GENERATION FUNCTIONALITY COMPLETA
+// ===============================
+
+// Registro global de charts
+window.__charts = window.__charts || [];
+
+function buildReportFileName() {
+    const name = (document.getElementById('player-name')?.textContent || 'player')
+        .trim().replace(/[^a-zA-Z0-9]/g, '_');
+    const dt = new Date();
+    const stamp = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    return `${name}_report_${stamp}.pdf`;
+}
+
+function getAllChartCanvases() {
+    return Array.from(document.querySelectorAll('.athletic-performance-grid canvas, .chart-container canvas'));
+}
+
+function findChartInstanceByCanvas(canvas) {
+    // Buscar instancia de Chart.js por canvas
+    if (window.Chart && Chart.getChart) {
+        const chart = Chart.getChart(canvas);
+        if (chart) return chart;
+    }
+
+    // Buscar en el array global si existe
+    if (window.__charts && Array.isArray(window.__charts)) {
+        const found = window.__charts.find(ch => 
+            ch?.canvas === canvas || ch?.ctx?.canvas === canvas);
+        if (found) return found;
+    }
+
+    // Fallback para versiones antiguas
+    if (window.Chart && window.Chart.instances) {
+        for (let id in window.Chart.instances) {
+            const chart = window.Chart.instances[id];
+            if (chart.chart && chart.chart.canvas === canvas) {
+                return chart;
+            }
+        }
+    }
+    return null;
+}
+
+function replaceChartsWithImages() {
+    const canvases = getAllChartCanvases();
+    const replacements = [];
+
+    console.log(`[PDF] Found ${canvases.length} canvases to convert`);
+
+    canvases.forEach((canvas, index) => {
+        let dataUrl = null;
+        const chart = findChartInstanceByCanvas(canvas);
+        
+        try {
+            if (chart && typeof chart.toBase64Image === 'function') {
+                dataUrl = chart.toBase64Image('image/png', 1.0);
+                console.log(`[PDF] Canvas ${index + 1}: Using Chart.js toBase64Image`);
+            } else if (canvas.toDataURL) {
+                dataUrl = canvas.toDataURL('image/png', 1.0);
+                console.log(`[PDF] Canvas ${index + 1}: Using canvas toDataURL`);
+            }
+        } catch (e) {
+            console.warn(`[PDF] Error converting canvas ${index + 1}:`, e);
+            try {
+                if (canvas.toDataURL) {
+                    dataUrl = canvas.toDataURL('image/png', 0.9);
+                    console.log(`[PDF] Canvas ${index + 1}: Using fallback toDataURL`);
+                }
+            } catch (e2) {
+                console.error(`[PDF] Failed to convert canvas ${index + 1}:`, e2);
+            }
+        }
+
+        if (dataUrl && dataUrl.length > 100) {
+            const img = new Image();
+            img.src = dataUrl;
+            img.style.cssText = canvas.style.cssText;
+            img.style.width = canvas.offsetWidth + 'px';
+            img.style.height = canvas.offsetHeight + 'px';
+            img.style.display = 'block';
+            
+            const parent = canvas.parentNode;
+            if (parent) {
+                parent.replaceChild(img, canvas);
+                replacements.push({ parent, img, canvas });
+                console.log(`[PDF] Canvas ${index + 1}: Successfully replaced with image`);
+            }
+        } else {
+            console.warn(`[PDF] Canvas ${index + 1}: Failed to generate valid data URL`);
+        }
+    });
+
+    console.log(`[PDF] Successfully replaced ${replacements.length} canvases with images`);
+
+    // Retornar función de restauración
+    return function restore() {
+        replacements.forEach(({ parent, img, canvas }, index) => {
+            try {
+                if (parent && img && canvas && parent.contains(img)) {
+                    parent.replaceChild(canvas, img);
+                }
+            } catch (e) {
+                console.warn(`[PDF] Error restoring canvas ${index + 1}:`, e);
+            }
+        });
+        console.log(`[PDF] Restored ${replacements.length} canvases`);
+    };
+}
+
+function waitForChartsReady(timeoutMs = 3000) {
+    return new Promise(resolve => {
+        setTimeout(resolve, timeoutMs);
+    });
+}
+
+// Función para limpiar datos de Chart.js antes de conversión
+function cleanChartData() {
+    if (window.Chart && window.Chart.instances) {
+        Object.keys(window.Chart.instances).forEach(key => {
+            const chart = window.Chart.instances[key];
+            if (chart && chart.data && chart.data.datasets) {
+                chart.data.datasets.forEach(dataset => {
+                    if (dataset.data) {
+                        dataset.data = dataset.data.map(value => {
+                            if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
+                                return 0;
+                            }
+                            return value;
+                        });
+                    }
+                });
+                chart.update('none');
+            }
+        });
+    }
+    
+    if (window.__charts && Array.isArray(window.__charts)) {
+        window.__charts.forEach(chart => {
+            if (chart && chart.data && chart.data.datasets) {
+                chart.data.datasets.forEach(dataset => {
+                    if (dataset.data) {
+                        dataset.data = dataset.data.map(value => {
+                            if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
+                                return 0;
+                            }
+                            return value;
+                        });
+                    }
+                });
+                chart.update('none');
+            }
+        });
+    }
+}
+
+async function exportElementToPDF(element, filename) {
+    // Opción A: html2pdf.js (descarga directa)
+    if (window.html2pdf) {
+        const opt = {
+            margin: 10,
+            filename: filename,
+            image: { type: 'png', quality: 1.0 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                height: element.scrollHeight,
+                width: element.scrollWidth,
+                allowTaint: true,
+                foreignObjectRendering: false
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        await window.html2pdf().from(element).set(opt).save();
+        console.log('[PDF] Generated using html2pdf');
+        return;
+    }
+
+    // Opción B: jsPDF + html2canvas
+    if (window.jsPDF && window.html2canvas) {
+        const { jsPDF } = window.jsPDF;
+        
+        const canvas = await window.html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+            height: element.scrollHeight,
+            width: element.scrollWidth,
+            allowTaint: true
+        });
+
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        
+        const imgWidth = pageWidth - (margin * 2);
+        const imgHeight = (imgWidth / canvas.width) * canvas.height;
+
+        if (imgHeight <= pageHeight - (margin * 2)) {
+            pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+        } else {
+            // Múltiples páginas
+            let remaining = imgHeight;
+            let srcY = 0;
+            const ratio = canvas.width / imgWidth;
+            
+            while (remaining > 0) {
+                const pageCanvasHeight = (pageHeight - (margin * 2)) * ratio;
+                const sliceHeight = Math.min(remaining * ratio, pageCanvasHeight);
+                
+                const pageCanvas = document.createElement('canvas');
+                pageCanvas.width = canvas.width;
+                pageCanvas.height = sliceHeight;
+                
+                const ctx = pageCanvas.getContext('2d');
+                ctx.drawImage(canvas, 0, srcY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+                
+                const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
+                const drawHeight = sliceHeight / ratio;
+                
+                if (srcY > 0) pdf.addPage();
+                pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, drawHeight);
+                
+                remaining -= drawHeight;
+                srcY += sliceHeight;
+            }
+        }
+
+        pdf.save(filename);
+        console.log('[PDF] Generated using jsPDF + html2canvas');
+        return;
+    }
+
+    // Fallback
+    console.warn('[PDF] Libraries not available, falling back to print dialog');
+    window.print();
+}
+
+function setupDownloadButton() {
+    const downloadBtn = document.getElementById('download-report-btn');
+    if (!downloadBtn) return;
+    
+    downloadBtn.addEventListener('click', async function () {
+        // Obtener el ID del jugador para abrir el reporte en nueva pestaña
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerId = urlParams.get('id');
+        
+        if (playerId) {
+            // Abrir directamente la página de reporte en nueva pestaña
+            window.open(`/player-report/${playerId}`, '_blank');
+        } else {
+            alert('No se pudo obtener el ID del jugador');
+        }
+    });
+}
+
+// Función simplificada que genera PDF directamente
+async function generatePDFDirectly(element) {
+    // Ocultar elementos que no deben aparecer en el PDF (pero NO el botón)
+    const elementsToHide = [
+        document.querySelector('.site-header'),
+        document.querySelector('.site-footer'),
+        document.querySelector('.back-button-container')
+        // NO ocultar .player-actions para mantener el botón visible
+    ].filter(el => el); // Filtrar elementos que realmente existen
+    
+    // Guardar estados originales
+    const originalStates = elementsToHide.map(el => ({
+        element: el,
+        display: el.style.display
+    }));
+    
+    // Ocultar elementos temporalmente
+    elementsToHide.forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // Esperar un momento
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    try {
+        const filename = buildReportFileName();
+        
+        // Intentar con html2pdf primero
+        if (window.html2pdf) {
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: { 
+                    scale: 1,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: true,
+                    letterRendering: true,
+                    allowTaint: true,
+                    scrollX: 0,
+                    scrollY: -window.scrollY,
+                    width: element.scrollWidth,
+                    height: element.scrollHeight
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait'
+                },
+                pagebreak: { 
+                    mode: ['avoid-all', 'css'],
+                    avoid: ['img', '.chart-container']
+                }
+            };
+            
+            await window.html2pdf().from(element).set(opt).save();
+            console.log('[PDF] Successfully generated with html2pdf');
+        }
+        // Fallback con jsPDF + html2canvas
+        else if (window.jsPDF && window.html2canvas) {
+            const { jsPDF } = window.jsPDF;
+            
+            const canvas = await window.html2canvas(element, {
+                scale: 1,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: true,
+                letterRendering: true,
+                allowTaint: true,
+                scrollX: 0,
+                scrollY: -window.scrollY,
+                width: element.scrollWidth,
+                height: element.scrollHeight
+            });
+            
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 10;
+            
+            const imgWidth = pageWidth - (margin * 2);
+            const imgHeight = (imgWidth / canvas.width) * canvas.height;
+            
+            if (imgHeight <= pageHeight - (margin * 2)) {
+                pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
+            } else {
+                // Múltiples páginas
+                let remaining = imgHeight;
+                let srcY = 0;
+                const ratio = canvas.width / imgWidth;
+                
+                while (remaining > 0) {
+                    const pageCanvasHeight = (pageHeight - (margin * 2)) * ratio;
+                    const sliceHeight = Math.min(remaining * ratio, pageCanvasHeight);
+                    
+                    const pageCanvas = document.createElement('canvas');
+                    pageCanvas.width = canvas.width;
+                    pageCanvas.height = sliceHeight;
+                    
+                    const ctx = pageCanvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+                    ctx.drawImage(canvas, 0, srcY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+                    
+                    const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+                    const drawHeight = sliceHeight / ratio;
+                    
+                    if (srcY > 0) pdf.addPage();
+                    pdf.addImage(pageImgData, 'JPEG', margin, margin, imgWidth, drawHeight);
+                    
+                    remaining -= drawHeight;
+                    srcY += sliceHeight;
+                }
+            }
+            
+            pdf.save(filename);
+            console.log('[PDF] Successfully generated with jsPDF + html2canvas');
+        } else {
+            throw new Error('No PDF libraries available');
+        }
+        
+    } finally {
+        // Restaurar elementos ocultos
+        originalStates.forEach(({ element, display }) => {
+            element.style.display = display;
+        });
+    }
+}
+
+function buildReportFileName() {
+    let name = 'player_report';
+    
+    // Intentar obtener el nombre del jugador
+    const playerNameElement = document.getElementById('player-name');
+    if (playerNameElement && playerNameElement.textContent) {
+        name = playerNameElement.textContent
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '_')
+            .replace(/_+/g, '_');
+    }
+    
+    const dt = new Date();
+    const stamp = `${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,'0')}${String(dt.getDate()).padStart(2,'0')}`;
+    
+    return `${name}_report_${stamp}.pdf`;
 }

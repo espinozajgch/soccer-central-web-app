@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="player-details-container">
+<div class="player-details-container" id="player-report-root">
     <div class="container">
         <!-- Back Button -->
         <div class="back-button-container">
@@ -46,6 +46,11 @@
                             <span class="stat-label">Weight</span>
                             <span class="stat-value" id="player-weight">-</span>
                         </div>
+                    </div>
+                    <div class="player-actions">
+                        <button class="btn-download-report" id="download-report-btn" style="display:none;">
+                            <i class="fas fa-download"></i> Download Report
+                        </button>
                     </div>
                 </div>
             </div>
@@ -135,13 +140,17 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Athletic Performance Metrics -->
-                <div class="detail-section">
+            <!-- Athletic Performance Section -->
+            <div class="athletic-performance-container">
+                <div class="detail-section full-width">
                     <h3><i class="fas fa-chart-line"></i> Athletic Performance</h3>
-                    <div class="detail-content" id="performance-metrics">
+                                    <div class="detail-content" id="performance-metrics">
+                    <div class="athletic-performance-grid">
                         <span style="color:#bbb;">Loading metrics...</span>
                     </div>
+                </div>
                 </div>
             </div>
 
@@ -249,6 +258,16 @@ function displayPlayerDetails(player, teamData) {
             jerseyElement.innerHTML = `<i class="fas fa-tshirt"></i> -`;
         }
     }
+    
+    // Show download report button
+    const downloadBtn = document.getElementById('download-report-btn');
+    if (downloadBtn) {
+        downloadBtn.style.display = 'inline-flex';
+    }
+    
+    // Store player data globally for report download
+    window.currentPlayerData = player;
+    window.currentTeamData = teamData;
     safeSetText('player-height', player.height && player.height > 0 ? `${player.height} cm` : '-');
     safeSetText('player-weight', player.weight && player.weight > 0 ? `${player.weight} kg` : '-');
     safeSetText('player-full-name', `${player.name || ''} ${player.lastName || ''}`.trim() || 'N/A');
@@ -310,30 +329,8 @@ function displayPlayerDetails(player, teamData) {
     }
     safeSetText('player-status', player.currentStatus || 'N/A');
 
-    // Athletic metrics
-    const perfDiv = document.getElementById('performance-metrics');
-    if (perfDiv) {
-        const metrics = [
-            { title: 'Anthropometry', array: player._thresholdsAnthropometry, icon: 'fa-ruler' },
-            { title: 'Power', array: player._thresholdsPower, icon: 'fa-bolt' },
-            { title: 'Speed', array: player._thresholdsSpeed, icon: 'fa-tachometer-alt' },
-            { title: 'Agility', array: player._thresholdsAgility, icon: 'fa-shoe-prints' },
-            { title: 'Endurance', array: player._thresholdsEndurance, icon: 'fa-running' }
-        ];
-        let perfHTML = '';
-        for (const cat of metrics) {
-            if (Array.isArray(cat.array) && cat.array.length > 0) {
-                perfHTML += `<div style="margin-bottom:1.2rem;">
-                    <strong style="color: var(--text-primary);"><i class="fas ${cat.icon}"></i> ${cat.title}</strong>
-                    <ul style="margin:.4rem 0 .6rem 1.1rem;color: var(--text-primary);font-size:.95rem">`;
-                cat.array.slice(0,4).forEach(metric => {
-                    perfHTML += `<li>${metric.name}: <span style="color:#f5b400">${metric.value}</span> <span style="opacity:.7;color: var(--text-secondary);">${metric.metric || ''}</span></li>`;
-                });
-                perfHTML += `</ul></div>`;
-            }
-        }
-        perfDiv.innerHTML = perfHTML || '<span style="color: var(--text-secondary);">No athletic data available.</span>';
-    }
+    // Load enhanced athletic performance data
+    loadEnhancedAthleticPerformance(playerId);
 
     safeSetText('player-biography', player.biography || 'No biography available.');
 }
@@ -393,6 +390,309 @@ function calculateAge(dateString) {
     const m = today.getMonth() - birth.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
     return age;
+}
+
+// Load enhanced athletic performance data
+function loadEnhancedAthleticPerformance(playerId) {
+    fetch(`/players/${playerId}/athletic-performance`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            displayEnhancedAthleticPerformance(data);
+        })
+        .catch(error => {
+            console.error('Error loading enhanced athletic performance:', error);
+            // Fallback to basic display
+            const perfDiv = document.getElementById('performance-metrics');
+            if (perfDiv) {
+                perfDiv.innerHTML = '<span style="color: var(--text-secondary);">No athletic data available.</span>';
+            }
+        });
+}
+
+// Display enhanced athletic performance data
+function displayEnhancedAthleticPerformance(data) {
+    const container = document.getElementById('performance-metrics');
+    if (!container || !data.enhanced_data) {
+        console.error('Athletic performance container or data not found');
+        return;
+    }
+
+    let html = '<div class="athletic-performance-grid">';
+    
+    // Process each category and test, combining them into a single grid
+    for (const [category, tests] of Object.entries(data.enhanced_data)) {
+        for (const [testName, testData] of Object.entries(tests)) {
+            html += displayTestWithChart(category, testName, testData);
+        }
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    // Initialize all charts after DOM is ready
+    setTimeout(() => {
+        initializeCharts(data.enhanced_data);
+    }, 100);
+}
+
+function displayTestWithChart(category, testName, testData) {
+    const unit = testData.unit || '';
+    const measurements = testData.measurements || [];
+    const positionAgeMedian = testData.position_age_median;
+    const teamMedian = testData.team_median;
+    
+    // Create unique chart ID
+    const chartId = `chart-${testName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
+    
+    let html = `<div class="test-section">`;
+    html += `<h5 class="test-title">${category} - ${testName}</h5>`;
+    
+    // Chart container
+    html += `<div class="chart-container">`;
+    html += `<canvas id="${chartId}" width="400" height="200"></canvas>`;
+    html += `</div>`;
+    
+    // Store data for chart initialization
+    if (!window.chartData) window.chartData = {};
+    window.chartData[chartId] = {
+        testName,
+        measurements,
+        positionAgeMedian,
+        teamMedian,
+        unit
+    };
+    
+    html += `</div>`;
+    return html;
+}
+
+// Initialize all charts
+function initializeCharts(enhancedData) {
+    if (!window.chartData) return;
+    
+    Object.keys(window.chartData).forEach(chartId => {
+        const data = window.chartData[chartId];
+        const canvas = document.getElementById(chartId);
+        if (!canvas) return;
+        
+        createChart(canvas, data);
+    });
+}
+
+// Create individual chart
+function createChart(canvas, data) {
+    const ctx = canvas.getContext('2d');
+    
+                    // Prepare data for chart - single line with different point colors
+                const labels = [];
+                const allData = [];
+                const pointColors = [];
+                // Validar y limpiar datos antes de crear el gráfico
+                if (data.measurements) {
+                    data.measurements = data.measurements.map(measurement => {
+                        if (typeof measurement.value === 'number' && 
+                            (isNaN(measurement.value) || !isFinite(measurement.value))) {
+                            measurement.value = 0;
+                        }
+                        return measurement;
+                    });
+                }
+                
+                data.measurements.forEach((measurement, index) => {
+                    const date = new Date(measurement.date);
+                    const formattedDate = date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    
+                    labels.push(formattedDate);
+                    allData.push(measurement.value);
+                    
+                    // Set point color based on data type
+                    if (measurement.is_real) {
+                        pointColors.push('#4CAF50'); // Green for real data
+                    } else {
+                        pointColors.push('#FF9800'); // Orange for generated data
+                    }
+                });
+                
+                // Create single dataset with dynamic point colors
+                const datasets = [
+                    {
+                        label: 'Measurements',
+                        data: allData,
+                        borderColor: '#4CAF50',
+                        backgroundColor: '#4CAF50',
+                        pointBackgroundColor: pointColors,
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.1,
+                        fill: false
+                    }
+                ];
+    
+    // Add median lines if available
+    if (data.positionAgeMedian !== null && data.positionAgeMedian !== undefined) {
+        datasets.push({
+            label: 'Position & Age Median',
+            data: Array(labels.length).fill(data.positionAgeMedian),
+            borderColor: '#2196F3',
+            backgroundColor: '#2196F3',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 0,
+            fill: false,
+            type: 'line'
+        });
+    }
+    
+    if (data.teamMedian !== null && data.teamMedian !== undefined) {
+        datasets.push({
+            label: 'Team Median',
+            data: Array(labels.length).fill(data.teamMedian),
+            borderColor: '#9C27B0',
+            backgroundColor: '#9C27B0',
+            borderWidth: 2,
+            borderDash: [3, 3],
+            pointRadius: 0,
+            fill: false,
+            type: 'line'
+        });
+    }
+    
+    // Chart configuration
+    const config = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#333333',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                                                            label: function(context) {
+                                        const value = context.parsed.y;
+                                        if (value === null) return null;
+                                        
+                                        let formattedValue = value;
+                                        if (typeof value === 'number' && !Number.isInteger(value)) {
+                                            formattedValue = value.toFixed(2);
+                                        }
+                                        
+                                        const unit = data.unit || '';
+                                        const datasetIndex = context.datasetIndex;
+                                        const datasets = context.chart.data.datasets;
+                                        const dataset = datasets[datasetIndex];
+                                        
+                                        // Check if this is a median line dataset
+                                        if (dataset.label && dataset.label.includes('Median')) {
+                                            if (dataset.label.includes('Position/Age')) {
+                                                return `Position/Age Median: ${formattedValue}${unit} - Average performance for players in same position (±3 years age range)`;
+                                            } else if (dataset.label.includes('Team')) {
+                                                return `Team Median: ${formattedValue}${unit} - Average performance for all players in current team`;
+                                            } else {
+                                                return `${dataset.label}: ${formattedValue}${unit}`;
+                                            }
+                                        }
+                                        
+                                        // For measurement data points
+                                        const pointIndex = context.dataIndex;
+                                        const measurement = data.measurements[pointIndex];
+                                        
+                                        // Determine data type based on the measurement
+                                        const dataType = measurement.is_real ? 'Real' : 'Generated';
+                                        return `Measurement: ${formattedValue}${unit} (${dataType})`;
+                                    }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#ffffff',
+                        maxRotation: 45
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#ffffff',
+                        callback: function(value) {
+                            if (typeof value === 'number' && !Number.isInteger(value)) {
+                                return value.toFixed(2);
+                            }
+                            return value;
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    };
+    
+    // Create the chart and ensure it's registered properly
+    const chart = new Chart(ctx, config);
+    
+    // Store reference for PDF generation (opcional)
+    if (!window.__charts) window.__charts = [];
+    window.__charts.push(chart);
+    
+    return chart;
+}
+
+// Download player report function
+function downloadPlayerReport() {
+    if (!playerId) {
+        console.error('No player ID available for report');
+        return;
+    }
+    
+    // Open report in new tab for printing/saving as PDF
+    const reportUrl = `/player-report/${playerId}`;
+    //window.open(reportUrl, '_blank');
 }
 </script>
 {% endblock %}

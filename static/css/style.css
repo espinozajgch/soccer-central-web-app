@@ -206,9 +206,9 @@ header.site-header, footer.site-footer {
 
 /* Container */
 .container {
-    max-width: 1120px;
+    max-width: 95%;
     margin: 0 auto;
-    padding: 0 1.2rem;
+    padding: 0 2rem;
 }
 
 /* Players Section */
@@ -232,6 +232,8 @@ header.site-header, footer.site-footer {
 /* Search Container */
 .search-container {
     margin: 1.2rem 0 2.5rem 0;
+    max-width: 100%;
+    padding: 0 1rem;
 }
 
 .search-box {
@@ -706,9 +708,258 @@ header.site-header, footer.site-footer {
 /* Player Details Grid */
 .player-details-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 2.2rem;
     margin-top: 1.7rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.athletic-performance-container {
+    margin-top: 2rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.athletic-performance-container .detail-section.full-width {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 1.5rem;
+}
+
+.athletic-performance-grid { /* New grid layout for charts */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(372px, 372px));
+    gap: 1.5rem;
+    margin-top: 1rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    justify-content: center;
+}
+
+
+
+/* Settings Page Styles */
+.settings-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem 0;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.settings-header h1 {
+    color: var(--accent-high);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 2px;
+}
+
+.settings-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-style: italic;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.settings-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-section h2 {
+    color: var(--accent-high);
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--accent-color);
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.last-invalidation {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.last-invalidation h3 {
+    color: var(--accent-high);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.last-invalidation p {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.action-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-card h3 {
+    color: var(--accent-high);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.action-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.info-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-card h3 {
+    color: var(--accent-high);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.info-card ul {
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.info-card ul ul {
+    margin-top: 0.5rem;
+    margin-left: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268, #495057);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.athletic-performance-grid .test-section {
+    margin-bottom: 0; /* Remove bottom margin since grid handles spacing */
+}
+
+.athletic-performance-grid .chart-container {
+    height: 250px; /* Slightly smaller height for grid layout */
 }
 
 .detail-section {
@@ -718,6 +969,8 @@ header.site-header, footer.site-footer {
     padding: 1.3rem;
     box-shadow: 0 2px 10px 1px var(--shadow-color);
     backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 100%;
 }
 
 .detail-section.full-width {
@@ -901,6 +1154,43 @@ header.site-header, footer.site-footer {
     color: var(--accent-high-text);
 }
 
+/* Download Report Button */
+.player-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-download-report {
+    background: linear-gradient(135deg, var(--accent-high), #c4b377);
+    color: var(--accent-high-text);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Roboto Condensed', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(220, 199, 136, 0.3);
+}
+
+.btn-download-report:hover {
+    background: linear-gradient(135deg, #c4b377, var(--accent-high));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 199, 136, 0.5);
+}
+
+.btn-download-report i {
+    font-size: 1.1rem;
+}
+
 /* Authentication Styles */
 .user-info {
     color: var(--accent-high);
@@ -1013,6 +1303,112 @@ header.site-header, footer.site-footer {
     font-size: 14px;
 }
 
+/* Enhanced Athletic Performance Styles */
+.athletic-performance-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.athletic-performance-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 0.5rem;
+}
+
+.chart-instructions {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    font-style: italic;
+}
+
+.category-section {
+    margin-bottom: 2rem;
+}
+
+.category-title {
+    color: var(--accent-color);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    border-left: 4px solid var(--accent-color);
+    padding-left: 1rem;
+}
+
+.test-section {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.test-title {
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.chart-container {
+    position: relative;
+    height: 280px;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    padding: 1rem;
+    max-width: 372px;
+}
+
+/* Responsive adjustments for charts */
+@media (max-width: 768px) {
+    .chart-container {
+        height: 250px;
+        max-width: 372px;
+    }
+    
+    .player-details-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .athletic-performance-grid {
+        grid-template-columns: repeat(auto-fit, minmax(372px, 372px)); /* Fixed 372px width on tablets */
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .container {
+        padding: 0 1rem;
+        max-width: 98%;
+    }
+    
+    .search-container {
+        padding: 0 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .athletic-performance-grid {
+        grid-template-columns: repeat(auto-fit, minmax(372px, 372px)); /* Fixed 372px width on mobile */
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .container {
+        padding: 0 0.75rem;
+        max-width: 99%;
+    }
+    
+    .search-container {
+        padding: 0 0.25rem;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 950px) {
     .features-grid { 
@@ -1081,3 +1477,142 @@ header.site-header, footer.site-footer {
         gap: 1rem; 
     }
 }
+
+/* Print Styles for Player Report */
+@media print {
+    body {
+        background: white !important;
+        color: #333 !important;
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+    
+    .site-header,
+    .site-footer,
+    .back-button-container,
+    .player-actions,
+    .btn-download-report {
+        display: none !important;
+    }
+    
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .player-report-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .report-header {
+        background: white !important;
+        color: #333 !important;
+        border-bottom: 2px solid #333 !important;
+        page-break-inside: avoid;
+    }
+    
+    .report-section {
+        background: white !important;
+        border: 1px solid #ddd !important;
+        color: #333 !important;
+        page-break-inside: avoid;
+        margin-bottom: 1rem !important;
+    }
+    
+    .report-section h3 {
+        color: #333 !important;
+        background: #f5f5f5 !important;
+        margin: 0 !important;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .detail-row {
+        border-bottom: 1px solid #eee !important;
+    }
+    
+    .detail-label {
+        color: #666 !important;
+    }
+    
+    .detail-value {
+        color: #333 !important;
+    }
+    
+    .chart-container {
+        background: white !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .athletic-performance-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    .test-section {
+        background: white !important;
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
+    }
+    
+    .test-title {
+        color: #333 !important;
+        background: #f8f9fa !important;
+        margin: 0 !important;
+        padding: 0.5rem !important;
+    }
+}
+/* PDF Generation - Chart container fixes */
+.chart-container {
+    position: relative;
+    height: 280px;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    padding: 1rem;
+    max-width: 372px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  /* Hide elements during PDF generation */
+  [data-html2canvas-ignore="true"] {
+    display: none !important;
+  }
+  
+  .pdf-generating {
+    pointer-events: none;
+  }
+  
+  /* Enhanced Print Styles para eliminación completa de headers/footers */
+  @media print {
+    @page {
+      margin: 0;
+      size: A4;
+    }
+    
+    body {
+      background: white !important;
+      color: #333 !important;
+      font-size: 12pt;
+      line-height: 1.4;
+      margin: 0 !important;
+      padding: 20px !important;
+    }
+  
+    .site-header,
+    .site-footer,
+    .back-button-container,
+    .player-actions,
+    .btn-download-report {
+      display: none !important;
+    }
+  }
+  
