@@ -153,9 +153,8 @@ class AuthenticationService {
     }
 
     // Método para generar contraseña por defecto o validarla
-    validatePlayerPassword(player, inputPassword) {
+    validatePlayerPassword(player, inputPassword,nameFromEmail) {
         // Opción 1: Usar contraseña por defecto
-        const defaultPassword = 'iterpro123';
         
         // Opción 2: Usar algún campo del jugador como contraseña
         // const playerPassword = player.birthDate || player._id || defaultPassword;
@@ -164,7 +163,7 @@ class AuthenticationService {
         // const playerId = player._id || '';
         // const playerPassword = playerId.slice(-4) + '2024';
         
-        return inputPassword === defaultPassword;
+        return inputPassword.trim().toLowerCase() === nameFromEmail;
     }
 
     async authenticate(emailInput, passwordInput) {
@@ -203,10 +202,10 @@ Ejemplo: si el jugador se llama "John Smith", prueba con:
             });
 
             // Validar contraseña
-            const isPasswordValid = this.validatePlayerPassword(foundPlayer, passwordInput);
+            const isPasswordValid = this.validatePlayerPassword(foundPlayer, passwordInput,nameFromEmail);
             
             if (!isPasswordValid) {
-                throw new Error('Contraseña incorrecta. Usa: iterpro123');
+                throw new Error('Password incorrect.');
             }
 
             console.log('[DEBUG] Authentication successful for player:', 
@@ -326,7 +325,7 @@ function initializeLogin() {
         const password = passwordInput.value;
 
         if (!email || !password) {
-            showMessage('Por favor, completa todos los campos', true);
+            showMessage('Please, fill all the fields', true);
             return;
         }
 
@@ -343,7 +342,7 @@ function initializeLogin() {
                 localStorage.setItem('playersData', JSON.stringify(this.usersData));
                 localStorage.setItem('playersDataTimestamp', Date.now().toString());
                 
-                showMessage(`¡Bienvenido ${result.user.name}! Estableciendo sesión...`);
+                showMessage(`Welcome ${result.user.name}! Setting session...`);
                 
                 // Establecer sesión en Flask
                 try {
