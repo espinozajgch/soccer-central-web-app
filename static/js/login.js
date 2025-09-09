@@ -268,9 +268,6 @@ function initializeLogin() {
             <div class="role">
                 <strong>Email:</strong> nombre@soccercentralsa.com
             </div>
-            <div class="role">
-                <strong>Contraseña:</strong> iterpro123
-            </div>
         `;
     }
 
