@@ -264,7 +264,7 @@ function initializeLogin() {
     const demoCredentials = document.querySelector('.demo-credentials');
     if (demoCredentials) {
         demoCredentials.innerHTML = `
-            <h4>Instrucciones:</h4>
+            <h4>Guidelines:</h4>
             <div class="role">
                 <strong>Email:</strong> nombre@soccercentralsa.com
             </div>
