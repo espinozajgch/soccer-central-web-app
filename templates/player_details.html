@@ -166,18 +166,54 @@
 </div>
 
 <script>
+    window.currentUser = {{ (current_user or {})|tojson }};
+</script>
+
+<script>
+
 // Get player ID from URL parameters
 const urlParams = new URLSearchParams(window.location.search);
 const playerId = urlParams.get('id');
 
+async function getCurrentUser() {
+    try {
+        const response = await fetch('/api/current-user', {
+            credentials: 'include'
+        });
+        if (response.ok) {
+            const user = await response.json();
+            window.currentUser = user;
+            console.log('Current user splayer_details_pageession:', user);
+            return user;
+        }
+        throw new Error('User not authenticated');
+    } catch (error) {
+        console.error('Error getting current user:', error);
+        return null;
+    }
+}
+
 if (playerId) {
-    loadPlayerDetails(playerId);
+    // Ya no necesitas getCurrentUser()
+    console.log('Current user session:', window.currentUser);
+    
+    if (window.currentUser) {
+        loadPlayerDetails(playerId);
+    } else {
+        showError('User not authenticated');
+    }
 } else {
     showError('No player ID provided');
 }
 
 function loadPlayerDetails(playerId) {
-    fetch(`/players/${playerId}`)
+    fetch(`/players/${playerId}`, {
+        credentials: 'include',  // ← Importante incluir credenciales
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    })
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

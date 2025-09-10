@@ -5,7 +5,9 @@ from datetime import datetime
 from iterpro_client import (
     get_players, get_teams, get_player_by_id, get_team_by_id, 
     get_players_by_team, get_enhanced_athletic_performance,
-    get_player_test_instances_batch, extract_latest_test_value
+    get_player_test_instances_batch, extract_latest_test_value,
+    clear_cache, clear_team_cache, clear_player_cache, 
+    cleanup_expired_cache, get_cache_stats
 )
 from auth import authenticate_user, login_required, role_required, get_user_team_players, get_user_player_profile
 from database import MedianCache
@@ -33,6 +35,19 @@ def login():
     
     return render_template("login.html")
 
+@app.route("/auth/set_session", methods=["POST"])
+def set_session():
+    data = request.get_json()
+    session['user'] = {
+        'id': data.get('user_id'),
+        'name': data.get('name'),
+        'username': data.get('username'),
+        'role': data.get('role', 'admin') # de momento rol siempre admin, cuando verifiquemos que vienen los roles en servicio, podremos poner el que corresponda.
+    }
+    return jsonify({'success': True})
+
+
+
 @app.route("/logout")
 def logout():
     session.pop('user', None)
@@ -46,18 +61,22 @@ def index():
     try:
         user = session.get('user')
         
-        if user['role'] == 'admin':
+        #sin roles obtenemos todos los jugadores
+        players = get_players()
+
+
+        #if user['role'] == 'admin':
             # Admin can see all players
-            players = get_players()
-        elif user['role'] == 'coach':
+        #    players = get_players()
+        #elif user['role'] == 'coach':
             # Coach can see their team players
-            players = get_user_team_players(user.get('team_id'))
-        elif user['role'] == 'player':
+        #    players = get_user_team_players(user.get('team_id'))
+       #elif user['role'] == 'player':
             # Player can only see their own profile
-            player_profile = get_user_player_profile(user.get('player_id'))
-            players = [player_profile] if player_profile else []
-        else:
-            players = []
+        #    player_profile = get_user_player_profile(user.get('player_id'))
+        #    players = [player_profile] if player_profile else []
+        #else:
+        #    players = []
             
         return render_template("index.html", players=players)
     except Exception as e:
@@ -69,21 +88,46 @@ def index():
 def get_players_function():
     try:
         user = session.get('user')
+
+        #sin roles obtenemos todos los jugadores
+        players = get_players()
         
-        if user['role'] == 'admin':
+        #if user['role'] == 'admin':
             # Admin can see all players
-            players = get_players()
-        elif user['role'] == 'coach':
+        #    players = get_players()
+        #elif user['role'] == 'coach':
             # Coach can see their team players
-            players = get_user_team_players(user.get('team_id'))
-        else:
+        #    players = get_user_team_players(user.get('team_id'))
+        #else:
             # Player can only see their own profile
-            player_profile = get_player_by_id(user.get('player_id'))
-            players = [player_profile] if player_profile else []
+        #    player_profile = get_player_by_id(user.get('player_id'))
+        #    players = [player_profile] if player_profile else []
             
         return jsonify(players)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/players', methods=['GET'])
+def api_get_players():
+    try:
+        # Llamar directamente a tu función de iterpro
+        players_data = get_players()
+        
+        if not players_data:
+            return jsonify({"error": "No players found", "users": []}), 404
+        
+        print(f"[DEBUG] Got {len(players_data)} players from iterpro API")
+        
+        # Devolver directamente los jugadores de iterpro
+        return jsonify({
+            "users": players_data,
+            "total_users": len(players_data)
+        }), 200
+        
+    except Exception as e:
+        print(f"[ERROR] Error in api_get_players: {str(e)}")
+        return jsonify({"error": str(e), "users": []}), 500
+
 
 # Para obtener detalles de un jugador específico
 @app.route("/players/<player_id>")
@@ -93,17 +137,17 @@ def get_player_details(player_id):
         user = session.get('user')
         
         # Check access permissions
-        if user['role'] == 'admin':
+       # if user['role'] == 'admin':
             # Admin can access any player
-            pass
-        elif user['role'] == 'coach':
+        #    pass
+        #elif user['role'] == 'coach':
             # Coach can access players from their team
             # This would need proper team validation in a real implementation
-            pass
-        elif user['role'] == 'player':
+        #    pass
+        #elif user['role'] == 'player':
             # Player can only access their own profile
-            if user.get('player_id') != player_id:
-                return jsonify({"error": "Access denied"}), 403
+        #    if user.get('player_id') != player_id:
+        #       return jsonify({"error": "Access denied"}), 403
         
         player = get_player_by_id(player_id)
         return jsonify(player)
@@ -126,19 +170,19 @@ def get_teams_function():
 def get_team_details(team_id):
     try:
         user = session.get('user')
-        
+       
         # Check access permissions
-        if user['role'] == 'admin':
+        #if user['role'] == 'admin':
             # Admin can access any team
-            pass
-        elif user['role'] == 'coach':
+        #    pass
+        #elif user['role'] == 'coach':
             # Coach can only access their own team
-            if user.get('team_id') != team_id:
-                return jsonify({"error": "Access denied"}), 403
-        elif user['role'] == 'player':
+        #    if user.get('team_id') != team_id:
+        #        return jsonify({"error": "Access denied"}), 403
+        #elif user['role'] == 'player':
             # Player can only access their own team
-            if user.get('team_id') != team_id:
-                return jsonify({"error": "Access denied"}), 403
+        #    if user.get('team_id') != team_id:
+        #        return jsonify({"error": "Access denied"}), 403
         
         team = get_team_by_id(team_id)
         if team:
@@ -152,7 +196,8 @@ def get_team_details(team_id):
 @app.route("/player")
 @login_required
 def player_details_page():
-    return render_template("player_details.html")
+    user = session.get('user')
+    return render_template("player_details.html",current_user=user)
 
 # Para obtener datos de rendimiento atlético mejorados
 @app.route("/players/<player_id>/athletic-performance")
@@ -162,19 +207,19 @@ def get_enhanced_athletic_performance_route(player_id):
     user = session.get('user')
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    
+
     # Check access permissions
-    if user['role'] == 'admin':
+    #if user['role'] == 'admin':
         # Admin can access any player
-        pass
-    elif user['role'] == 'coach':
+    #    pass
+    #elif user['role'] == 'coach':
         # Coach can access players from their team
         # This would need proper team validation in a real implementation
-        pass
-    elif user['role'] == 'player':
+    #    pass
+    #elif user['role'] == 'player':
         # Player can only access their own profile
-        if user.get('player_id') != player_id:
-            return jsonify({"error": "Access denied"}), 403
+    #    if user.get('player_id') != player_id:
+    #        return jsonify({"error": "Access denied"}), 403
     
     try:
         # Get enhanced athletic performance data
@@ -555,7 +600,8 @@ def player_report(player_id):
                         age -= 1
                     return age
                 return None
-            except:
+            except Exception as e:
+                print(f"Error generating player report: {e}")
                 return None
         
         return render_template(
@@ -564,6 +610,7 @@ def player_report(player_id):
             team=team_data,
             athletic_performance=athletic_performance_data,
             current_datetime=datetime.now(),
+            now=datetime.now(),
             calculate_age=calculate_age
         )
     except Exception as e:
@@ -572,6 +619,13 @@ def player_report(player_id):
         return redirect(url_for('index'))
 
 
+@app.route("/api/current-user")
+@login_required
+def get_current_user():
+    user = session.get('user')
+    if user:
+        return jsonify(user)
+    return jsonify({"error": "No user in session"}), 401
 
 if __name__ == "__main__":
     app.run(debug=True)

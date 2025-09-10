@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <span class="player-nationality"><i class="fas fa-flag"></i> ${nationality}</span>
                                 <span class="player-jersey-card"><i class="fas fa-tshirt"></i> ${p.jersey ? `#${p.jersey}` : 'N/A'}</span>
                             </div>
-                            <button onclick="viewPlayer('${p.id}')" class="btn-primary">
+                            <button onclick="viewPlayer('${p.id || p._id}')" class="btn-primary">
                                 <i class="fas fa-eye"></i> View Profile
                             </button>
                         </div>
@@ -196,119 +196,264 @@ document.addEventListener('DOMContentLoaded', function () {
             container.innerHTML = accordionHTML;
         }
 
-        // Fetch players data and get team information
-        fetch('/players')
-            .then(res => res.json())
-            .then(players => {
-                allPlayers = players;
-                filteredPlayers = players;
+        // FUNCIÓN CORREGIDA: Cargar jugadores con cache
+        async function loadPlayers() {
+            try {
+                console.log('[DEBUG] Starting to load players...');
+                
+                // Verificar si hay datos cacheados del login
+                const cachedPlayersData = localStorage.getItem('playersData');
+                const cachedTimestamp = localStorage.getItem('playersDataTimestamp');
+                const currentTime = Date.now();
+                const fiveMinutesInMs = 5 * 60 * 1000; // 5 minutos
 
-                if (!players || !players.length) {
-                    displayPlayers([]);
-                    return;
+                // VALIDACIÓN MEJORADA: Verificar que los datos sean válidos
+                if (cachedPlayersData && 
+                    cachedTimestamp && 
+                    cachedPlayersData !== 'undefined' && 
+                    cachedPlayersData !== 'null' && 
+                    cachedPlayersData.length > 10) { // Al menos debe tener más de 10 caracteres para ser JSON válido
+                    
+                    const dataAge = currentTime - parseInt(cachedTimestamp);
+                    
+                    if (dataAge < fiveMinutesInMs && !isNaN(parseInt(cachedTimestamp))) {
+                        try {
+                            console.log('[DEBUG] Attempting to use cached players data from login');
+                            const playersData = JSON.parse(cachedPlayersData);
+                            
+                            // Verificar que los datos parseados sean válidos
+                            if (Array.isArray(playersData) && playersData.length > 0) {
+                                console.log('[DEBUG] Successfully using cached players data from login');
+                                
+                                // Usar los datos cacheados
+                                allPlayers = playersData;
+                                filteredPlayers = [...allPlayers];
+                                
+                                console.log(`[DEBUG] Loaded ${allPlayers.length} players from cache`);
+                                
+                                // Continuar con la lógica de equipos usando datos cacheados
+                                await loadTeamInfoForPlayers();
+                                return; // Salir sin hacer llamada a API
+                            } else {
+                                console.log('[DEBUG] Cached data is not a valid array, fetching fresh data');
+                            }
+                        } catch (parseError) {
+                            console.warn('[DEBUG] Error parsing cached data:', parseError);
+                            // Limpiar datos corruptos
+                            localStorage.removeItem('playersData');
+                            localStorage.removeItem('playersDataTimestamp');
+                        }
+                    } else {
+                        console.log('[DEBUG] Cached data is too old, fetching fresh data');
+                        // Limpiar datos antiguos
+                        localStorage.removeItem('playersData');
+                        localStorage.removeItem('playersDataTimestamp');
+                    }
+                } else {
+                    console.log('[DEBUG] No valid cached data found');
+                    // Limpiar datos inválidos si existen
+                    if (cachedPlayersData) {
+                        localStorage.removeItem('playersData');
+                        localStorage.removeItem('playersDataTimestamp');
+                    }
                 }
 
-                // Get unique team IDs from players
-                const uniqueTeamIds = [...new Set(players.map(p => p.teamId).filter(id => id))];
+                // Si no hay datos cacheados válidos, hacer llamada a API
+                console.log('[DEBUG] Fetching fresh players data from API');
                 
+                const response = await fetch('/api/players');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const playersArray = data.users || data || [];
+                
+                // Validar que recibimos datos válidos
+                if (!Array.isArray(playersArray)) {
+                    throw new Error('API response is not an array');
+                }
+                
+                allPlayers = playersArray;
+                filteredPlayers = [...allPlayers];
+                
+                // Guardar datos frescos en cache SOLO si son válidos
+                if (allPlayers.length > 0) {
+                    try {
+                        localStorage.setItem('playersData', JSON.stringify(allPlayers));
+                        localStorage.setItem('playersDataTimestamp', Date.now().toString());
+                        console.log(`[DEBUG] Cached ${allPlayers.length} players to localStorage`);
+                    } catch (storageError) {
+                        console.warn('[DEBUG] Could not cache players data:', storageError);
+                    }
+                }
+                
+                console.log(`[DEBUG] Loaded ${allPlayers.length} players from API`);
+                
+                // Continuar con la lógica de equipos
+                await loadTeamInfoForPlayers();
+                
+            } catch (error) {
+                console.error('[ERROR] Error loading players:', error);
+                
+                // Mostrar error en la UI
+                const loadingContainer = document.getElementById('players-loading');
+                const errorContainer = document.getElementById('player-error');
+                const container = document.getElementById('players-container');
+                
+                if (loadingContainer) loadingContainer.style.display = 'none';
+                if (errorContainer) {
+                    errorContainer.style.display = 'block';
+                    errorContainer.querySelector('p').textContent = `Error loading players: ${error.message}`;
+                }
+                if (container) container.style.display = 'none';
+                
+                // Intentar usar datos cacheados aunque sean antiguos como último recurso
+                const fallbackData = localStorage.getItem('playersData');
+                if (fallbackData && 
+                    fallbackData !== 'undefined' && 
+                    fallbackData !== 'null' && 
+                    fallbackData.length > 10) {
+                    
+                    try {
+                        console.log('[DEBUG] Attempting to use old cached data as fallback');
+                        const parsedFallback = JSON.parse(fallbackData);
+                        
+                        if (Array.isArray(parsedFallback) && parsedFallback.length > 0) {
+                            allPlayers = parsedFallback;
+                            filteredPlayers = [...allPlayers];
+                            
+                            await loadTeamInfoForPlayers();
+                            
+                            if (errorContainer) {
+                                errorContainer.innerHTML = '<p><i class="fas fa-exclamation-triangle"></i> Using cached data (connection error)</p>';
+                            }
+                            
+                            console.log('[DEBUG] Successfully used fallback cached data');
+                        }
+                    } catch (fallbackError) {
+                        console.error('[DEBUG] Error using fallback data:', fallbackError);
+                        // Limpiar datos corruptos
+                        localStorage.removeItem('playersData');
+                        localStorage.removeItem('playersDataTimestamp');
+                    }
+                }
+            }
+        }
+
+
+        // NUEVA FUNCIÓN: Cargar información de equipos
+        async function loadTeamInfoForPlayers() {
+            if (!allPlayers || !allPlayers.length) {
+                displayPlayers([]);
+                return;
+            }
+
+            // Get unique team IDs from players
+            const uniqueTeamIds = [...new Set(allPlayers.map(p => p.teamId).filter(id => id))];
+            
+            try {
                 // First try to fetch all teams at once (more efficient)
-                fetch('/teams')
-                    .then(res => {
-                        if (!res.ok) {
-                            throw new Error(`HTTP ${res.status}`);
+                const teamsResponse = await fetch('/teams');
+                if (!teamsResponse.ok) {
+                    throw new Error(`HTTP ${teamsResponse.status}`);
+                }
+                
+                const allTeams = await teamsResponse.json();
+                console.log('[DEBUG] All teams data:', allTeams);
+                
+                // Create a map of team information from all teams
+                const teamsMap = {};
+                if (Array.isArray(allTeams)) {
+                    allTeams.forEach(team => {
+                        if (team._id) {
+                            teamsMap[team._id] = team;
                         }
-                        return res.json();
-                    })
-                    .then(allTeams => {
-                        console.log('All teams data:', allTeams);
-                        
-                        // Create a map of team information from all teams
-                        const teamsMap = {};
-                        if (Array.isArray(allTeams)) {
-                            allTeams.forEach(team => {
-                                if (team._id) {
-                                    teamsMap[team._id] = team;
-                                }
-                            });
-                        }
-                        
-                        // Add team information to players
-                        allPlayers = allPlayers.map(player => ({
-                            ...player,
-                            teamInfo: teamsMap[player.teamId] || { name: `Team ${player.teamId?.slice(-4) || 'Unknown'}` }
-                        }));
-                        filteredPlayers = allPlayers;
-
-                        if (savedSearchTerm) {
-                            filterPlayers(savedSearchTerm);
-                        } else {
-                            displayPlayers(allPlayers);
-                            updateSearchResultsInfo(allPlayers.length, allPlayers.length);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching all teams, falling back to individual requests:', error);
-                        
-                        // Fallback: fetch team information for each unique team ID individually
-                        const teamPromises = uniqueTeamIds.map(teamId => 
-                            fetch(`/teams/${teamId}`)
-                                .then(res => {
-                                    if (!res.ok) {
-                                        throw new Error(`HTTP ${res.status}`);
-                                    }
-                                    return res.json();
-                                })
-                                .then(team => {
-                                    console.log(`Team data for ${teamId}:`, team);
-                                    return { id: teamId, ...team };
-                                })
-                                .catch(error => {
-                                    console.error(`Error fetching team ${teamId}:`, error);
-                                    return { id: teamId, name: `Team ${teamId.slice(-4)}` };
-                                })
-                        );
-
-                        Promise.all(teamPromises)
-                            .then(teams => {
-                                // Create a map of team information
-                                const teamsMap = {};
-                                teams.forEach(team => {
-                                    teamsMap[team.id] = team;
-                                });
-
-                                // Add team information to players
-                                allPlayers = allPlayers.map(player => ({
-                                    ...player,
-                                    teamInfo: teamsMap[player.teamId] || { name: `Team ${player.teamId?.slice(-4) || 'Unknown'}` }
-                                }));
-                                filteredPlayers = allPlayers;
-
-                                if (savedSearchTerm) {
-                                    filterPlayers(savedSearchTerm);
-                                } else {
-                                    displayPlayers(allPlayers);
-                                    updateSearchResultsInfo(allPlayers.length, allPlayers.length);
-                                }
-                            })
-                            .catch(err => {
-                                console.error('Error loading team data:', err);
-                                // Fallback: display players without team info
-                                if (savedSearchTerm) {
-                                    filterPlayers(savedSearchTerm);
-                                } else {
-                                    displayPlayers(allPlayers);
-                                    updateSearchResultsInfo(allPlayers.length, allPlayers.length);
-                                }
-                            });
                     });
-            })
-            .catch(err => {
-                console.error('Error loading players:', err);
-                const loading = document.getElementById('players-loading');
-                const error = document.getElementById('player-error');
-                if (loading) loading.style.display = 'none';
-                if (error) error.style.display = 'block';
-            });
+                }
+                
+                // Add team information to players
+                allPlayers = allPlayers.map(player => ({
+                    ...player,
+                    teamInfo: teamsMap[player.teamId] || { name: `Team ${player.teamId?.slice(-4) || 'Unknown'}` }
+                }));
+                filteredPlayers = [...allPlayers];
+
+                // Display players
+                if (savedSearchTerm) {
+                    filterPlayers(savedSearchTerm);
+                } else {
+                    displayPlayers(allPlayers);
+                    updateSearchResultsInfo(allPlayers.length, allPlayers.length);
+                }
+
+            } catch (error) {
+                console.error('[DEBUG] Error fetching all teams, falling back to individual requests:', error);
+                
+                // Fallback: fetch team information for each unique team ID individually
+                const teamPromises = uniqueTeamIds.map(teamId => 
+                    fetch(`/teams/${teamId}`)
+                        .then(res => {
+                            if (!res.ok) {
+                                throw new Error(`HTTP ${res.status}`);
+                            }
+                            return res.json();
+                        })
+                        .then(team => {
+                            console.log(`[DEBUG] Team data for ${teamId}:`, team);
+                            return { id: teamId, ...team };
+                        })
+                        .catch(error => {
+                            console.error(`[DEBUG] Error fetching team ${teamId}:`, error);
+                            return { id: teamId, name: `Team ${teamId.slice(-4)}` };
+                        })
+                );
+
+                try {
+                    const teams = await Promise.all(teamPromises);
+                    
+                    // Create a map of team information
+                    const teamsMap = {};
+                    teams.forEach(team => {
+                        teamsMap[team.id] = team;
+                    });
+
+                    // Add team information to players
+                    allPlayers = allPlayers.map(player => ({
+                        ...player,
+                        teamInfo: teamsMap[player.teamId] || { name: `Team ${player.teamId?.slice(-4) || 'Unknown'}` }
+                    }));
+                    filteredPlayers = [...allPlayers];
+
+                    // Display players
+                    if (savedSearchTerm) {
+                        filterPlayers(savedSearchTerm);
+                    } else {
+                        displayPlayers(allPlayers);
+                        updateSearchResultsInfo(allPlayers.length, allPlayers.length);
+                    }
+                    
+                } catch (err) {
+                    console.error('[DEBUG] Error loading team data:', err);
+                    // Fallback: display players without team info
+                    if (savedSearchTerm) {
+                        filterPlayers(savedSearchTerm);
+                    } else {
+                        displayPlayers(allPlayers);
+                        updateSearchResultsInfo(allPlayers.length, allPlayers.length);
+                    }
+                }
+            }
+        }
+
+        // LLAMAR A LA NUEVA FUNCIÓN EN LUGAR DE FETCH DIRECTO
+        loadPlayers().catch(err => {
+            console.error('Error in loadPlayers:', err);
+            const loading = document.getElementById('players-loading');
+            const error = document.getElementById('player-error');
+            if (loading) loading.style.display = 'none';
+            if (error) error.style.display = 'block';
+        });
     }
 
     // ===============================
@@ -318,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setupDownloadButton();
 });
 
-// Calcular edad
+// Resto de tus funciones sin cambios...
 function calculateAge(dateString) {
     const birth = new Date(dateString);
     const today = new Date();
@@ -328,7 +473,6 @@ function calculateAge(dateString) {
     return age;
 }
 
-// Navegar a detalle de jugador
 function viewPlayer(playerId) {
     window.location.href = `/player?id=${playerId}`;
 }
@@ -350,11 +494,8 @@ function toggleTeam(teamId) {
     }
 }
 
-// ===============================
-// PDF GENERATION FUNCTIONALITY COMPLETA
-// ===============================
+// ... resto de tus funciones PDF sin cambios ...
 
-// Registro global de charts
 window.__charts = window.__charts || [];
 
 function buildReportFileName() {

@@ -452,7 +452,7 @@
         <!-- Report Footer -->
         <div style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 2px solid #e9ecef; color: #6c757d; font-size: 0.9rem;">
             <p><strong>Soccer Central SA</strong> - Developing Future Football Talents</p>
-            <p>This report was generated on {{ moment().strftime('%B %d, %Y at %I:%M %p') if moment else 'today' }}</p>
+            <p>This report was generated on {{ now.strftime('%B %d, %Y at %I:%M %p') }}</p>
         </div>
     </div>
 
@@ -460,12 +460,12 @@
         // Auto-print functionality (optional)
         document.addEventListener('DOMContentLoaded', function() {
             // Add print button functionality
-            const printBtn = document.querySelector('.print-btn');
-            if (printBtn) {
-                printBtn.addEventListener('click', function() {
-                    window.print();
-                });
-            }
+            //const printBtn = document.querySelector('.print-btn');
+            //if (printBtn) {
+            //    printBtn.addEventListener('click', function() {
+            //        window.print();
+            //    });
+            //}
         });
 
         // Helper function to calculate age (for Jinja2 template)
