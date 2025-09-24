@@ -5,3 +5,4 @@ SQLAlchemy==2.0.30
 passlib==1.7.4
 mysql-connector-python==8.4.0
 numpy>=1.26.0
+gunicorn==23.0.0
