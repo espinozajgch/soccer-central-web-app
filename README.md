@@ -124,6 +124,53 @@ The system uses two authentication methods as required by the Iterpro API:
    - Format: `Basic base64(username:password)`
        - Example: `Basic dXNlcm5hbWU6cGFzc3dvcmQ=`
 
+## Learning Management System (LMS) Database
+
+Soccer Central has expanded to include an educational platform connecting universities and sports academies across the United States. The LMS provides courses for all soccer academy personnel including coaches, players, medical staff, physical trainers, and marketing teams.
+
+### Database Features
+
+The simplified database schema (`/database/scripts/`) includes:
+
+- **Unified User Management**: Single users table with role-based access (student, instructor, coach, admin)
+- **Organization Support**: Universities and academies as course providers
+- **Course Catalog**: Categorized courses with multilingual content support
+- **Progress Tracking**: Automatic enrollment and completion tracking
+- **Digital Certification**: Automated certificate generation with verification
+- **Review System**: Course ratings and student feedback
+- **Notifications**: Built-in communication system
+
+### Partnering Universities
+
+The platform integrates with courses from leading Texas universities:
+- **University of Texas at San Antonio (UTSA)** - Sport Management, Kinesiology
+- **Texas A&M University** - Sport Management, Coaching
+- **Southern Methodist University (SMU)** - Sport Management, Business
+- **University of Houston** - Sport Administration, Athletic Training
+- **St. Mary's University** - Sport Management, Coaching
+
+### Course Categories
+
+- **Coaching**: Youth development, tactics, methodology
+- **Management**: Operations, budgeting, team management
+- **Marketing**: Digital marketing, fan engagement, branding
+- **Medical**: Injury prevention, assessment, emergency response
+- **Nutrition**: Performance nutrition, meal planning, supplementation
+- **Physical Training**: Strength and conditioning, periodization
+
+### Database Setup
+
+1. Navigate to `/database/scripts/`
+2. Review the comprehensive README for setup instructions
+3. Execute initialization script:
+   ```bash
+   mysql -u username -p database_name < 00_init_database.sql
+   ```
+4. Update `.env` with database credentials
+5. Run the application
+
+See `/database/scripts/README.md` for detailed documentation, schema diagrams, and usage examples.
+
 ## File Structure
 
 ```
@@ -133,6 +180,12 @@ soccer-central-web-app/
 ├── requirements.txt       # Python dependencies
 ├── .env.template         # Environment variables template
 ├── api-json.json         # OpenAPI specification
+├── database/             # LMS Database scripts
+│   └── scripts/
+│       ├── README.md          # Database documentation
+│       ├── 00_init_database.sql  # Master initialization script
+│       ├── 01_schema.sql         # Complete database schema
+│       └── 02_sample_data.sql    # Sample data with universities
 ├── templates/
 │   ├── base.html         # Base template
 │   ├── index.html        # Main page template
